@@ -1,0 +1,96 @@
+# Evaluation Rubric for Sophie Reflex Orchestrator
+
+# Main Evaluation Categories
+categories:
+  completeness:
+    description: "How completely does the solution address the task requirements?"
+    weight: 0.3
+    levels:
+      excellent: "Fully addresses all requirements with comprehensive detail"
+      good: "Addresses most requirements with sufficient detail"
+      fair: "Addresses basic requirements but lacks detail"
+      poor: "Misses key requirements or is incomplete"
+  
+  accuracy:
+    description: "How accurate and correct is the solution?"
+    weight: 0.3
+    levels:
+      excellent: "Completely accurate with no errors"
+      good: "Mostly accurate with minor errors"
+      fair: "Partially accurate with significant errors"
+      poor: "Contains major inaccuracies or errors"
+  
+  creativity:
+    description: "How creative and innovative is the solution?"
+    weight: 0.2
+    levels:
+      excellent: "Highly innovative with unique approaches"
+      good: "Creative with some novel elements"
+      fair: "Somewhat creative but mostly conventional"
+      poor: "Lacks creativity or innovation"
+  
+  clarity:
+    description: "How clear and well-structured is the solution?"
+    weight: 0.1
+    levels:
+      excellent: "Exceptionally clear and well-organized"
+      good: "Clear with good organization"
+      fair: "Somewhat clear but could be better organized"
+      poor: "Unclear or poorly structured"
+  
+  feasibility:
+    description: "How feasible and implementable is the solution?"
+    weight: 0.1
+    levels:
+      excellent: "Highly feasible with clear implementation path"
+      good: "Feasible with reasonable implementation effort"
+      fair: "Somewhat feasible but requires significant effort"
+      poor: "Not feasible or impractical"
+
+# Scoring System
+scoring:
+  scale:
+    excellent: 1.0
+    good: 0.8
+    fair: 0.6
+    poor: 0.3
+  
+  thresholds:
+    excellent_min: 0.9
+    good_min: 0.7
+    fair_min: 0.5
+    poor_min: 0.0
+
+# Evaluation Criteria for Different Task Types
+task_types:
+  problem_solving:
+    weights:
+      completeness: 0.4
+      accuracy: 0.3
+      creativity: 0.1
+      clarity: 0.1
+      feasibility: 0.1
+  
+  creative_writing:
+    weights:
+      completeness: 0.2
+      accuracy: 0.1
+      creativity: 0.4
+      clarity: 0.2
+      feasibility: 0.1
+  
+  technical_design:
+    weights:
+      completeness: 0.3
+      accuracy: 0.3
+      creativity: 0.1
+      clarity: 0.2
+      feasibility: 0.2
+  
+  strategic_planning:
+    weights:
+      completeness: 0.3
+      accuracy: 0.2
+      creativity: 0.2
+      clarity: 0.1
+      feasibility: 0.3

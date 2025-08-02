@@ -1,0 +1,73 @@
+# Agent Configuration for Sophie Reflex Orchestrator
+
+# Base Agent Configuration
+base_agent:
+  timeout: 30  # seconds
+  max_retries: 3
+  retry_delay: 1  # seconds
+
+# Prover Agents
+provers:
+  - name: "creative_prover"
+    prompt: "You are a creative problem solver. Generate innovative solutions to the given task."
+    model: "openai"
+    temperature: 0.8
+    max_variants: 3
+    hyperparameters:
+      creativity: 0.9
+      detail_level: 0.7
+  
+  - name: "analytical_prover"
+    prompt: "You are an analytical problem solver. Generate logical, step-by-step solutions to the given task."
+    model: "openai"
+    temperature: 0.3
+    max_variants: 3
+    hyperparameters:
+      logic_score: 0.9
+      structure_level: 0.8
+  
+  - name: "practical_prover"
+    prompt: "You are a practical problem solver. Generate realistic, implementable solutions to the given task."
+    model: "anthropic"
+    temperature: 0.5
+    max_variants: 3
+    hyperparameters:
+      feasibility: 0.9
+      cost_efficiency: 0.8
+
+# Evaluator Agents
+evaluators:
+  - name: "quality_evaluator"
+    prompt: "Evaluate the quality of the given solution based on completeness, accuracy, and relevance."
+    model: "openai"
+    temperature: 0.2
+    hyperparameters:
+      weight_completeness: 0.4
+      weight_accuracy: 0.4
+      weight_relevance: 0.2
+  
+  - name: "creativity_evaluator"
+    prompt: "Evaluate the creativity and innovation of the given solution."
+    model: "anthropic"
+    temperature: 0.3
+    hyperparameters:
+      weight_novelty: 0.5
+      weight_originality: 0.5
+
+# Refiner Agents
+refiners:
+  - name: "mutation_refiner"
+    prompt: "Analyze the given solution and suggest targeted improvements based on its weaknesses."
+    model: "openai"
+    temperature: 0.6
+    hyperparameters:
+      mutation_strength: 0.3
+      focus_areas: ["clarity", "efficiency", "completeness"]
+  
+  - name: "crossover_refiner"
+    prompt: "Combine the best elements from multiple solutions to create an improved hybrid solution."
+    model: "anthropic"
+    temperature: 0.5
+    hyperparameters:
+      crossover_points: 3
+      balance_ratio: 0.6

@@ -1,0 +1,46 @@
+# System Configuration for Sophie Reflex Orchestrator
+
+# API Keys and Authentication
+api_keys:
+  openai: ""  # Set your OpenAI API key here
+  anthropic: ""  # Set your Anthropic API key here
+
+# Model Configuration
+models:
+  default: "openai"  # Options: openai, anthropic
+  openai:
+    model: "gpt-4"
+    temperature: 0.7
+    max_tokens: 2000
+  anthropic:
+    model: "claude-3-sonnet-20240229"
+    temperature: 0.7
+    max_tokens: 2000
+
+# Memory Backend Configuration
+memory:
+  backend: "chromadb"  # Options: chromadb, sqlite-vss
+  chromadb:
+    host: "localhost"
+    port: 8000
+    collection_name: "sophie_memory"
+  sqlite-vss:
+    db_path: "./memory/sophie_memory.db"
+    dimension: 1536
+
+# System Settings
+system:
+  max_agents: 10
+  max_iterations: 100
+  trust_threshold: 0.7
+  hitl_enabled: true
+  ui_port: 8001
+  log_level: "INFO"
+
+# GA Loop Configuration
+genetic_algorithm:
+  population_size: 5
+  mutation_rate: 0.1
+  crossover_rate: 0.3
+  elite_count: 2
+  max_generations: 50
