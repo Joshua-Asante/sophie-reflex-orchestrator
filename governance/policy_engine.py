@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from enum import Enum
 import re
+from concurrent.futures import ThreadPoolExecutor
+import functools
 
 logger = structlog.get_logger()
 
@@ -67,11 +69,28 @@ class PolicyEngine:
         self.security_policies = policies_config.get("security", {})
         self.performance_policies = policies_config.get("performance", {})
         
-        # Policy caches
+        # Policy caches with improved TTL management
         self.policy_cache = {}
         self.cache_ttl = 300  # 5 minutes
+        self.cache_stats = {"hits": 0, "misses": 0}
         
-        logger.info("Policy engine initialized", policies_loaded=len(self.policies_config))
+        # Thread pool for CPU-intensive operations
+        self.thread_pool = ThreadPoolExecutor(max_workers=4)
+        
+        # Compile regex patterns for better performance
+        self._compile_regex_patterns()
+        
+        logger.info("Policy engine initialized", 
+                   policies_loaded=len(self.policies_config),
+                   cache_ttl=self.cache_ttl)
+    
+    def _compile_regex_patterns(self):
+        """Compile regex patterns for condition evaluation."""
+        self.patterns = {
+            "trust_score": re.compile(r"trust_score\s*([<>=]+)\s*([\d.]+)"),
+            "confidence_score": re.compile(r"confidence_score\s*([<>=]+)\s*([\d.]+)"),
+            "iteration_count": re.compile(r"iteration_count\s*([<>=]+)\s*(\d+)")
+        }
     
     async def evaluate_action(self, context: PolicyContext) -> PolicyResult:
         """Evaluate an action against all applicable policies."""
@@ -82,37 +101,36 @@ class PolicyEngine:
             # Check cache first
             cached_result = self._get_cached_result(cache_key)
             if cached_result:
+                self.cache_stats["hits"] += 1
                 return cached_result
             
-            # Evaluate policies
-            results = []
+            self.cache_stats["misses"] += 1
             
-            # HITL policies
-            hitl_result = await self._evaluate_hitl_policies(context)
-            results.append(hitl_result)
+            # Evaluate policies concurrently for better performance
+            policy_tasks = [
+                self._evaluate_hitl_policies(context),
+                self._evaluate_agent_lifecycle_policies(context),
+                self._evaluate_trust_policies(context),
+                self._evaluate_resource_policies(context),
+                self._evaluate_security_policies(context),
+                self._evaluate_performance_policies(context)
+            ]
             
-            # Agent lifecycle policies
-            lifecycle_result = await self._evaluate_agent_lifecycle_policies(context)
-            results.append(lifecycle_result)
+            # Wait for all policy evaluations to complete
+            results = await asyncio.gather(*policy_tasks, return_exceptions=True)
             
-            # Trust policies
-            trust_result = await self._evaluate_trust_policies(context)
-            results.append(trust_result)
-            
-            # Resource limit policies
-            resource_result = await self._evaluate_resource_policies(context)
-            results.append(resource_result)
-            
-            # Security policies
-            security_result = await self._evaluate_security_policies(context)
-            results.append(security_result)
-            
-            # Performance policies
-            performance_result = await self._evaluate_performance_policies(context)
-            results.append(performance_result)
+            # Filter out exceptions and log them
+            valid_results = []
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    logger.error(f"Policy evaluation failed", 
+                               policy_type=["hitl", "lifecycle", "trust", "resource", "security", "performance"][i],
+                               error=str(result))
+                else:
+                    valid_results.append(result)
             
             # Combine results
-            final_result = self._combine_policy_results(results, context)
+            final_result = self._combine_policy_results(valid_results, context)
             
             # Cache result
             self._cache_result(cache_key, final_result)
@@ -122,13 +140,17 @@ class PolicyEngine:
                 agent_id=context.agent_id,
                 action=context.action,
                 decision=final_result.decision.value,
-                reason=final_result.reason
+                reason=final_result.reason,
+                confidence=final_result.confidence
             )
             
             return final_result
             
         except Exception as e:
-            logger.error("Policy evaluation failed", agent_id=context.agent_id, action=context.action, error=str(e))
+            logger.error("Policy evaluation failed", 
+                        agent_id=context.agent_id, 
+                        action=context.action, 
+                        error=str(e))
             return PolicyResult(
                 decision=PolicyDecision.BLOCK,
                 reason=f"Policy evaluation error: {str(e)}",
@@ -144,56 +166,65 @@ class PolicyEngine:
                 confidence=1.0
             )
         
-        conditions_met = []
-        modifications = {}
-        
-        # Check if human review is required
-        require_review_conditions = self.hitl_policies.get("require_human_review", [])
-        
-        for condition in require_review_conditions:
-            if await self._evaluate_condition(condition, context):
-                conditions_met.append(condition)
-        
-        # Check auto-approval conditions
-        auto_approve_conditions = self.hitl_policies.get("auto_approve", [])
-        can_auto_approve = True
-        
-        for condition in auto_approve_conditions:
-            if not await self._evaluate_condition(condition, context):
-                can_auto_approve = False
-                break
-        
-        # Make decision
-        if conditions_met:
-            return PolicyResult(
-                decision=PolicyDecision.REQUIRE_HUMAN_REVIEW,
-                reason=f"Human review required: {', '.join(conditions_met)}",
-                confidence=0.9,
-                conditions_met=conditions_met,
-                modifications={"requires_human_review": True}
-            )
-        elif can_auto_approve:
-            return PolicyResult(
-                decision=PolicyDecision.ALLOW,
-                reason="Auto-approval conditions met",
-                confidence=0.8,
-                conditions_met=auto_approve_conditions
-            )
-        else:
-            # Check approval threshold
-            approval_threshold = self.hitl_policies.get("approval_threshold", 0.7)
-            if context.trust_score >= approval_threshold:
-                return PolicyResult(
-                    decision=PolicyDecision.ALLOW,
-                    reason=f"Trust score {context.trust_score} meets approval threshold {approval_threshold}",
-                    confidence=0.7
-                )
-            else:
+        try:
+            conditions_met = []
+            modifications = {}
+            
+            # Check if human review is required
+            require_review_conditions = self.hitl_policies.get("require_human_review", [])
+            
+            for condition in require_review_conditions:
+                if await self._evaluate_condition(condition, context):
+                    conditions_met.append(condition)
+            
+            # Check auto-approval conditions
+            auto_approve_conditions = self.hitl_policies.get("auto_approve", [])
+            can_auto_approve = True
+            
+            for condition in auto_approve_conditions:
+                if not await self._evaluate_condition(condition, context):
+                    can_auto_approve = False
+                    break
+            
+            # Make decision
+            if conditions_met:
                 return PolicyResult(
                     decision=PolicyDecision.REQUIRE_HUMAN_REVIEW,
-                    reason=f"Trust score {context.trust_score} below approval threshold {approval_threshold}",
-                    confidence=0.8
+                    reason=f"Human review required: {', '.join(conditions_met)}",
+                    confidence=0.9,
+                    conditions_met=conditions_met,
+                    modifications={"requires_human_review": True}
                 )
+            elif can_auto_approve:
+                return PolicyResult(
+                    decision=PolicyDecision.ALLOW,
+                    reason="Auto-approval conditions met",
+                    confidence=0.8,
+                    conditions_met=auto_approve_conditions
+                )
+            else:
+                # Check approval threshold
+                approval_threshold = self.hitl_policies.get("approval_threshold", 0.7)
+                if context.trust_score >= approval_threshold:
+                    return PolicyResult(
+                        decision=PolicyDecision.ALLOW,
+                        reason=f"Trust score {context.trust_score} meets approval threshold {approval_threshold}",
+                        confidence=0.7
+                    )
+                else:
+                    return PolicyResult(
+                        decision=PolicyDecision.REQUIRE_HUMAN_REVIEW,
+                        reason=f"Trust score {context.trust_score} below approval threshold {approval_threshold}",
+                        confidence=0.8
+                    )
+        
+        except Exception as e:
+            logger.error("HITL policy evaluation failed", error=str(e))
+            return PolicyResult(
+                decision=PolicyDecision.REQUIRE_HUMAN_REVIEW,
+                reason=f"HITL policy evaluation error: {str(e)}",
+                confidence=0.5
+            )
     
     async def _evaluate_agent_lifecycle_policies(self, context: PolicyContext) -> PolicyResult:
         """Evaluate agent lifecycle policies."""
@@ -429,7 +460,7 @@ class PolicyEngine:
             # Parse condition
             if condition.startswith("trust_score"):
                 # Trust score conditions
-                match = re.match(r"trust_score\s*([<>=]+)\s*([\d.]+)", condition)
+                match = self.patterns["trust_score"].match(condition)
                 if match:
                     operator, value = match.groups()
                     threshold = float(value)
@@ -447,7 +478,7 @@ class PolicyEngine:
             
             elif condition.startswith("confidence_score"):
                 # Confidence score conditions
-                match = re.match(r"confidence_score\s*([<>=]+)\s*([\d.]+)", condition)
+                match = self.patterns["confidence_score"].match(condition)
                 if match:
                     operator, value = match.groups()
                     threshold = float(value)
@@ -463,7 +494,7 @@ class PolicyEngine:
             
             elif condition.startswith("iteration_count"):
                 # Iteration count conditions
-                match = re.match(r"iteration_count\s*([<>=]+)\s*(\d+)", condition)
+                match = self.patterns["iteration_count"].match(condition)
                 if match:
                     operator, value = match.groups()
                     threshold = int(value)
@@ -623,6 +654,8 @@ class PolicyEngine:
         return {
             "cache_size": len(self.policy_cache),
             "cache_ttl": self.cache_ttl,
+            "cache_hits": self.cache_stats["hits"],
+            "cache_misses": self.cache_stats["misses"],
             "policies_configured": {
                 "hitl": bool(self.hitl_policies),
                 "agent_lifecycle": bool(self.agent_lifecycle_policies),
@@ -673,3 +706,51 @@ class PolicyEngine:
             validation_results["valid"] = False
         
         return validation_results
+    
+    def evaluate_hitl_requirement(self, trust_score: float, confidence_score: float, 
+                                 content: str = "", agent_id: str = None) -> bool:
+        """Evaluate if human-in-the-loop review is required."""
+        try:
+            if not self.hitl_policies.get("enabled", False):
+                return False
+            
+            approval_threshold = self.hitl_policies.get("approval_threshold", 0.7)
+            
+            # Check if trust score is below threshold
+            if trust_score < approval_threshold:
+                return True
+            
+            # Check if confidence score is below threshold
+            if confidence_score < approval_threshold:
+                return True
+            
+            # Check for sensitive content patterns
+            sensitive_patterns = self.hitl_policies.get("sensitive_patterns", [])
+            for pattern in sensitive_patterns:
+                if pattern.lower() in content.lower():
+                    return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error("HITL requirement evaluation failed", error=str(e))
+            return True  # Default to requiring HITL on error
+    
+    def validate_trust_score(self, trust_score: float) -> bool:
+        """Validate if a trust score is within acceptable range."""
+        try:
+            min_score = self.trust_policies.get("min_trust_score", 0.0)
+            max_score = self.trust_policies.get("max_trust_score", 1.0)
+            return min_score <= trust_score <= max_score
+        except Exception as e:
+            logger.error("Trust score validation failed", error=str(e))
+            return False
+    
+    def check_execution_policy(self, agent_id: str, retry_count: int) -> bool:
+        """Check if execution is allowed based on policies."""
+        try:
+            max_retries = self.resource_limits.get("max_retries", 3)
+            return retry_count < max_retries
+        except Exception as e:
+            logger.error("Execution policy check failed", error=str(e))
+            return False

@@ -1,0 +1,277 @@
+# Enhanced Custom Tool Template for SOPHIE
+# This template provides a comprehensive structure for creating custom tools
+
+name: "Enhanced Custom Tool Template"
+description: "Comprehensive template for creating custom tools with advanced features"
+version: "2.0.0"
+author: "SOPHIE System"
+category: "template"
+
+# Enhanced tool configuration
+config:
+  timeout: 30
+  retry_attempts: 3
+  rate_limit: 100  # requests per minute
+  cache_ttl: 300   # seconds
+  security_level: "medium"  # low, medium, high, critical
+
+# Input schema with validation
+input_schema:
+  type: "object"
+  properties:
+    query:
+      type: "string"
+      description: "The main query or request"
+      minLength: 1
+      maxLength: 1000
+    parameters:
+      type: "object"
+      description: "Additional parameters for the tool"
+      properties:
+        format:
+          type: "string"
+          enum: ["json", "xml", "csv", "text"]
+          default: "json"
+        timeout:
+          type: "integer"
+          minimum: 1
+          maximum: 300
+          default: 30
+    authentication:
+      type: "object"
+      description: "Authentication credentials if required"
+      properties:
+        api_key:
+          type: "string"
+          description: "API key for external service"
+        username:
+          type: "string"
+          description: "Username for basic auth"
+        password:
+          type: "string"
+          description: "Password for basic auth"
+  required: ["query"]
+
+# Output schema with detailed structure
+output_schema:
+  type: "object"
+  properties:
+    success:
+      type: "boolean"
+      description: "Whether the operation was successful"
+    data:
+      type: "object"
+      description: "The main result data"
+      properties:
+        result:
+          type: "string"
+          description: "The primary result"
+        metadata:
+          type: "object"
+          description: "Additional metadata about the result"
+        confidence:
+          type: "number"
+          minimum: 0
+          maximum: 1
+          description: "Confidence score for the result"
+    error:
+      type: "object"
+      description: "Error information if operation failed"
+      properties:
+        code:
+          type: "string"
+          description: "Error code"
+        message:
+          type: "string"
+          description: "Error message"
+        details:
+          type: "object"
+          description: "Additional error details"
+    performance:
+      type: "object"
+      description: "Performance metrics"
+      properties:
+        execution_time:
+          type: "number"
+          description: "Execution time in seconds"
+        memory_usage:
+          type: "number"
+          description: "Memory usage in MB"
+        api_calls:
+          type: "integer"
+          description: "Number of API calls made"
+
+# Enhanced tool implementation
+implementation:
+  language: "python"
+  dependencies:
+    - "requests>=2.28.0"
+    - "pydantic>=1.10.0"
+    - "aiohttp>=3.8.0"
+    - "asyncio"
+  
+  # Main function template
+  main_function: |
+    async def execute_custom_tool(input_data: dict) -> dict:
+        """
+        Enhanced custom tool implementation template.
+        
+        Args:
+            input_data: Dictionary containing tool inputs
+            
+        Returns:
+            Dictionary containing tool outputs
+        """
+        try:
+            # Validate input
+            validated_input = validate_input(input_data)
+            
+            # Execute tool logic
+            result = await process_request(validated_input)
+            
+            # Calculate confidence
+            confidence = calculate_confidence(result, validated_input)
+            
+            # Format response
+            response = {
+                "success": True,
+                "data": {
+                    "result": result,
+                    "metadata": {
+                        "source": "custom_tool",
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "version": "2.0.0"
+                    },
+                    "confidence": confidence
+                },
+                "performance": {
+                    "execution_time": execution_time,
+                    "memory_usage": get_memory_usage(),
+                    "api_calls": api_call_count
+                }
+            }
+            
+            return response
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": {
+                    "code": "EXECUTION_ERROR",
+                    "message": str(e),
+                    "details": {
+                        "error_type": type(e).__name__,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                }
+            }
+    
+    def validate_input(input_data: dict) -> dict:
+        """Validate and sanitize input data."""
+        # Implementation here
+        pass
+    
+    async def process_request(validated_input: dict) -> str:
+        """Process the main tool request."""
+        # Implementation here
+        pass
+    
+    def calculate_confidence(result: str, input_data: dict) -> float:
+        """Calculate confidence score for the result."""
+        # Implementation here
+        pass
+
+# Security and compliance
+security:
+  data_encryption: true
+  audit_logging: true
+  rate_limiting: true
+  input_validation: true
+  output_sanitization: true
+  
+  compliance:
+    gdpr: true
+    hipaa: false
+    sox: false
+    
+  permissions:
+    read: true
+    write: false
+    delete: false
+    admin: false
+
+# Testing configuration
+testing:
+  unit_tests: true
+  integration_tests: true
+  performance_tests: true
+  
+  test_cases:
+    - name: "Basic functionality"
+      input:
+        query: "Test query"
+        parameters:
+          format: "json"
+      expected_output:
+        success: true
+        data:
+          confidence: 0.8
+    
+    - name: "Error handling"
+      input:
+        query: ""
+      expected_output:
+        success: false
+        error:
+          code: "VALIDATION_ERROR"
+
+# Documentation
+documentation:
+  usage_examples:
+    - name: "Basic usage"
+      description: "Simple tool execution"
+      code: |
+        result = await execute_custom_tool({
+          "query": "Hello world",
+          "parameters": {
+            "format": "json"
+          }
+        })
+    
+    - name: "With authentication"
+      description: "Tool execution with API key"
+      code: |
+        result = await execute_custom_tool({
+          "query": "Authenticated request",
+          "authentication": {
+            "api_key": "your-api-key-here"
+          }
+        })
+  
+  troubleshooting:
+    - problem: "Timeout errors"
+      solution: "Increase timeout parameter or check network connectivity"
+    - problem: "Authentication failures"
+      solution: "Verify API key and permissions"
+    - problem: "Rate limiting"
+      solution: "Implement exponential backoff or reduce request frequency"
+
+# Monitoring and observability
+monitoring:
+  metrics:
+    - "execution_time"
+    - "success_rate"
+    - "error_rate"
+    - "memory_usage"
+    - "api_calls"
+  
+  alerts:
+    - condition: "error_rate > 0.1"
+      action: "notify_admin"
+    - condition: "execution_time > 30"
+      action: "log_warning"
+  
+  logging:
+    level: "INFO"
+    format: "json"
+    include_sensitive_data: false 

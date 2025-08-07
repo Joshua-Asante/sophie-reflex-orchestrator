@@ -1,0 +1,14 @@
+name: query_generator
+description: Generate SQL + explanation from natural language.
+endpoint: https://stub.invalid/querygen
+method: POST
+parameters:
+  nl_query:
+    type: string
+  table_ref:
+    type: string
+    description: BigQuery table reference
+  api_key:
+    type: string
+response:
+  type: text

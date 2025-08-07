@@ -1,0 +1,2 @@
+{"timestamp": 1754534847.85101, "event_type": "test", "component": "test_component", "user_id": null, "session_id": null, "task_id": null, "duration": null, "success": true, "error_message": null, "metadata": null, "metrics": null}
+{"timestamp": 1754534927.219327, "event_type": "test", "component": "test_component", "user_id": null, "session_id": null, "task_id": null, "duration": null, "success": true, "error_message": null, "metadata": null, "metrics": null}

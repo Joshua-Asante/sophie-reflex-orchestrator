@@ -1,0 +1,13 @@
+name: notion_create_page
+description: Create a new Notion page (stubbed).
+endpoint: https://stub.invalid/notion
+method: POST
+parameters:
+  database_id:
+    type: string
+  title:
+    type: string
+  content:
+    type: string
+response:
+  type: text

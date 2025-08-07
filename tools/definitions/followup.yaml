@@ -1,0 +1,16 @@
+name: followup
+description: Turn a follow-up question into a standalone natural-language query.
+endpoint: https://stub.invalid/followup
+method: POST
+parameters:
+  followup_text:
+    type: string
+    description: The follow-up question
+  history:
+    type: object
+    description: List of prior turns with keys query, sql, summary
+  api_key:
+    type: string
+    description: OpenAI API key
+response:
+  type: text

@@ -1,0 +1,60 @@
+name: trust_gate
+description: Validate execution plans against security policies and constitutional guardrails
+endpoint: https://stub.invalid/trust-gate
+method: POST
+parameters:
+  plan_yaml:
+    type: string
+    description: YAML execution plan to validate
+  trust_score:
+    type: number
+    description: Current trust score for the system
+  approval_level:
+    type: string
+    description: Required approval level
+    enum: [autonomous, notification, approval, supervision]
+  digital_signature:
+    type: string
+    description: Digital signature of the plan for audit trail
+response:
+  type: object
+  properties:
+    approved:
+      type: boolean
+      description: Whether the plan passed all security checks
+    validation_results:
+      type: object
+      description: Detailed validation results
+      properties:
+        security_check:
+          type: boolean
+          description: Security policy compliance
+        constitutional_check:
+          type: boolean
+          description: Constitutional guardrail compliance
+        risk_assessment:
+          type: string
+          enum: [low, medium, high, critical]
+        policy_violations:
+          type: array
+          description: List of policy violations found
+          items:
+            type: string
+        recommendations:
+          type: array
+          description: Recommendations for plan modification
+          items:
+            type: string
+    audit_trail:
+      type: object
+      description: Audit trail information
+      properties:
+        timestamp:
+          type: string
+          description: Validation timestamp
+        validator_id:
+          type: string
+          description: ID of the validation component
+        signature:
+          type: string
+          description: Digital signature of validation result 

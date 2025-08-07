@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "plan_name": {
+      "type": "string",
+      "description": "Name of the plan"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what the plan does"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the plan"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique name for this step"
+          },
+          "tool": {
+            "type": "string",
+            "description": "Tool to execute for this step"
+          },
+          "params": {
+            "type": "object",
+            "description": "Parameters to pass to the tool"
+          },
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of step names this step depends on"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of what this step does"
+          }
+        },
+        "required": ["name", "tool"],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": ["plan_name", "steps"],
+  "additionalProperties": false
+}

@@ -1,4 +1,4 @@
-# Governance Policies for Sophie Reflex Orchestrator
+# Governance Policies for Sophie Reflex Orchestrator (Optimized)
 
 # Human-in-the-Loop (HITL) Policies
 hitl:
@@ -6,6 +6,7 @@ hitl:
   approval_threshold: 0.7  # Minimum trust score for auto-approval
   rejection_threshold: 0.4  # Maximum trust score for auto-rejection
   timeout_seconds: 300  # Time to wait for human intervention
+  auto_approve_timeout: 60  # Time to wait before auto-approving low-risk decisions
   
   # Conditions requiring human review
   require_human_review:
@@ -14,6 +15,8 @@ hitl:
     - contains_sensitive_content: true
     - high_risk_task: true
     - iteration_count > 10
+    - solution_complexity > 0.8
+    - resource_usage > 0.7
   
   # Auto-approval conditions
   auto_approve:
@@ -21,6 +24,15 @@ hitl:
     - confidence_score >= 0.7
     - iteration_count < 5
     - no_interventions: true
+    - solution_complexity < 0.3
+    - resource_usage < 0.3
+  
+  # Escalation conditions
+  escalate_to_supervisor:
+    - trust_score < 0.3
+    - consecutive_failures > 5
+    - critical_error: true
+    - security_violation: true
 
 # Agent Lifecycle Policies
 agent_lifecycle:
@@ -29,18 +41,31 @@ agent_lifecycle:
     - trust_score < 0.3
     - consecutive_failures > 3
     - performance_decline: 0.2
+    - resource_consumption > 0.8
+    - error_rate > 0.5
   
   # Forking conditions
   fork_agents:
     - trust_score > 0.8
     - high_performance: true
     - unique_solution: true
+    - innovation_score > 0.7
+    - diversity_contribution > 0.6
   
   # Mutation conditions
   mutate_agents:
     - trust_score < 0.6
     - stagnant_performance: true
     - diversity_needed: true
+    - learning_plateau: true
+    - adaptation_required: true
+  
+  # Evolution parameters
+  evolution:
+    mutation_rate: 0.1
+    crossover_rate: 0.3
+    selection_pressure: 0.7
+    diversity_threshold: 0.5
 
 # Trust Management Policies
 trust:
@@ -56,12 +81,24 @@ trust:
     human_rejection: -0.25
     high_quality_output: +0.05
     low_quality_output: -0.1
+    innovative_solution: +0.08
+    efficient_execution: +0.03
+    collaborative_behavior: +0.02
   
   # Trust decay
   decay:
     enabled: true
     rate: 0.01  # Per iteration
     max_decay: 0.3
+    decay_interval: 10  # Iterations between decay checks
+  
+  # Trust thresholds
+  thresholds:
+    critical: 0.2
+    warning: 0.4
+    acceptable: 0.6
+    good: 0.8
+    excellent: 0.9
 
 # Resource Limits
 resource_limits:
@@ -69,11 +106,21 @@ resource_limits:
   max_memory_usage: "1GB"
   max_execution_time: 300  # seconds per agent
   max_total_iterations: 100
+  max_api_calls_per_minute: 60
+  max_tokens_per_request: 4000
   
   # Rate limiting
   rate_limits:
     requests_per_minute: 60
     tokens_per_minute: 10000
+    concurrent_sessions: 5
+  
+  # Resource monitoring
+  monitoring:
+    cpu_threshold: 0.8
+    memory_threshold: 0.8
+    disk_threshold: 0.9
+    network_threshold: 0.7
 
 # Security Policies
 security:
@@ -84,15 +131,27 @@ security:
       - "violence"
       - "adult_content"
       - "illegal_activities"
+      - "personal_data"
+      - "confidential_info"
+    
+    # Content analysis
+    analysis:
+      sentiment_threshold: -0.5
+      toxicity_threshold: 0.7
+      bias_detection: true
   
   data_privacy:
     encrypt_sensitive_data: true
     retention_days: 30
     anonymize_logs: true
+    data_masking: true
+    access_logging: true
   
   access_control:
     require_authentication: false  # For demo purposes
     audit_all_actions: true
+    session_timeout: 3600  # seconds
+    max_failed_attempts: 5
 
 # Performance Policies
 performance:
@@ -100,6 +159,8 @@ performance:
     - minimize_latency
     - maximize_quality
     - balance_diversity
+    - optimize_resource_usage
+    - enhance_user_experience
   
   monitoring:
     track_metrics:
@@ -108,8 +169,54 @@ performance:
       - "success_rates"
       - "human_interventions"
       - "resource_usage"
+      - "error_rates"
+      - "response_times"
+      - "throughput"
+      - "convergence_rate"
+      - "diversity_scores"
   
   alerts:
     low_trust_score: 0.3
     high_failure_rate: 0.5
     resource_exhaustion: 0.8
+    slow_response_time: 30  # seconds
+    high_error_rate: 0.3
+    low_diversity: 0.2
+  
+  # Performance thresholds
+  thresholds:
+    min_quality_score: 0.6
+    max_execution_time: 300
+    min_convergence_rate: 0.1
+    max_resource_usage: 0.8
+
+# Quality Assurance Policies
+quality_assurance:
+  evaluation:
+    min_evaluators: 2
+    consensus_threshold: 0.7
+    quality_threshold: 0.6
+    
+  validation:
+    require_validation: true
+    validation_timeout: 60
+    auto_approve_high_quality: true
+    
+  feedback:
+    collect_feedback: true
+    feedback_weight: 0.3
+    improvement_threshold: 0.1
+
+# Adaptive Learning Policies
+adaptive_learning:
+  enabled: true
+  learning_rate: 0.01
+  adaptation_threshold: 0.1
+  exploration_rate: 0.2
+  
+  # Learning parameters
+  parameters:
+    min_exploration: 0.1
+    max_exploration: 0.5
+    learning_decay: 0.95
+    adaptation_interval: 10

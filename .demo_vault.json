@@ -1,0 +1,65 @@
+{
+  "api_key": {
+    "value": "gAAAAABokyjrsRwcHydsQ6FIbPAv09mMXcHNaH9_gqEF764j5d_XIH-X2qGsrxsDmgVhJL1KkCxriqFr-AIH_1TuGj7uwB5jGgKIRXT_rbV0FJ80PtSftyk=",
+    "created_at": 1754474731.2984116,
+    "metadata": {
+      "demo": true,
+      "created_by": "security_demo"
+    },
+    "hmac": "54ba634f1299b94f327f3da82a8495bfd3deafbcf8c8a733130ddd3248da752a"
+  },
+  "database_password": {
+    "value": "gAAAAABokyjrqeeJFTMWYx_1OA9oyoXJN1IGWsMXNRPXXaIxuxRyQyIrTb0ylc1ZSqyoirw24mzeursmpiJmg9UBjSfWuihdy9kSvQstzVhRZW5xYxUYZvI=",
+    "created_at": 1754474731.3104143,
+    "metadata": {
+      "demo": true,
+      "created_by": "security_demo"
+    },
+    "hmac": "6eb0eea35f774f4adce40772fa717208c851aea1534eb55bbe505e1ac53531d9"
+  },
+  "oauth_client_secret": {
+    "value": "gAAAAABokyjrKTx4jr9tF4TvNPa4bDHgbKYwMZgLzPNsFwA4jk2LQf3ie0EV9b7tcSjn52uStg5fR_kzmWNAWDBu5eE6wSedBZywoUBfG377drlQ_RwRPLI=",
+    "created_at": 1754474731.3197966,
+    "metadata": {
+      "demo": true,
+      "created_by": "security_demo"
+    },
+    "hmac": "62a71b706432fb874492c212b155da78932331cab0760782454ae9938dfa4db9"
+  },
+  "encryption_key": {
+    "value": "gAAAAABokyjrfGjy0lYZsfC1OyHJh4gjenHzeeTEiYfek2AjFk62_LPnB9BYqot5HdfGVlbi6n7xpxvIrsjPUe6NXziQ-gAygsOSMaK_Mc9CIW9NwEsy7SQ=",
+    "created_at": 1754474731.3240852,
+    "metadata": {
+      "demo": true,
+      "created_by": "security_demo"
+    },
+    "hmac": "bed9a6e9cc757acba87d8203fe80622199853363bf37aa37eb198feb7b0d33a4"
+  },
+  "google_access_token": {
+    "value": "gAAAAABokyjrzZaqHJXibDkX62OPXOD5UQUEaBrhUHfOQRM1b_7pVWW26xOcrfyn63olOLpuF19DT1-PE4OgHmIBeKLnakmueShsvjnBQiG8OoehxX-UoW0=",
+    "created_at": 1754474731.351421,
+    "metadata": {
+      "type": "oauth_access_token",
+      "provider": "google",
+      "expires_at": 1754478331.3503175,
+      "scope": "oauth"
+    },
+    "hmac": "92d323b762bf864afb2d81212018b2bc299c6c9e1f8abc8c0b56977f53b05cb0"
+  },
+  "google_refresh_token": {
+    "value": "gAAAAABokyjrlXG3xFlXsivP1WBucoZJvRzGxLb1OvfAQArteJWYXJg50geRLaphkvjnYpRnnxUQgXnxbcMs7xgO-pI8yoAKxA==",
+    "created_at": 1754474731.3543358,
+    "metadata": {
+      "type": "oauth_refresh_token",
+      "provider": "google",
+      "scope": "oauth"
+    },
+    "hmac": "6fd34b1d4c579afdcef878abb8ddb8d3b616af9f3f724ceed6b81813037655b7"
+  },
+  "test_invalid": {
+    "value": "gAAAAABokyjtqOhx__ZYQdGlIku_CQl7Q_LO-znTxmzAFILwWDyHOJ9s7Q0Hj3DllxP6IjyZKuZttTZe04q-DeQDNbMmx3z6Xw==",
+    "created_at": 1754474733.4506006,
+    "metadata": {},
+    "hmac": "b180dff2057cadf7b432660ae8a0e021fab6362020c0a000bf26720a28a247cd"
+  }
+}

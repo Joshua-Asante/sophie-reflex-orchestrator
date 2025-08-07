@@ -1,0 +1,10 @@
+name: file_list_dir
+description: List files and directories inside a given path.
+endpoint: https://stub.invalid/list
+method: GET
+parameters:
+  path:
+    type: string
+    description: Directory to list
+response:
+  type: json

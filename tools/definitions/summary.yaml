@@ -1,0 +1,12 @@
+name: summary
+description: Summarise a small pandas-like JSON table.
+endpoint: https://stub.invalid/summary
+method: POST
+parameters:
+  df_json:
+    type: string
+    description: JSON string of the table (list of dicts)
+  api_key:
+    type: string
+response:
+  type: text

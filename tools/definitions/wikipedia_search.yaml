@@ -1,0 +1,19 @@
+name: wikipedia_search
+description: "Searches Wikipedia for a given term."
+endpoint: https://en.wikipedia.org/w/api.php
+method: GET
+parameters:
+  action:
+    description: "The API action to perform."
+    type: "string"
+  list:
+    description: "Which list to get."
+    type: "string"
+  srsearch:
+    description: "The search term."
+    type: "string"
+  format:
+    description: "The response format."
+    type: "string"
+response:
+  type: "json"

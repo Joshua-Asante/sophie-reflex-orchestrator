@@ -1,0 +1,13 @@
+name: file_write
+description: Write text to a file (creates directories if needed).
+endpoint: https://stub.invalid/write
+method: POST
+parameters:
+  path:
+    type: string
+    description: Absolute or relative file path
+  content:
+    type: string
+    description: Text to write
+response:
+  type: text

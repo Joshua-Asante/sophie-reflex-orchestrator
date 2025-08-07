@@ -1,73 +1,604 @@
-# Agent Configuration for Sophie Reflex Orchestrator
+# Agent Configuration for Sophie Reflex Orchestrator (Optimized)
 
 # Base Agent Configuration
 base_agent:
   timeout: 30  # seconds
   max_retries: 3
   retry_delay: 1  # seconds
+  max_tokens: 4000
+  temperature_default: 0.7
+  model_default: "openai"
+  
+  # Performance settings
+  performance:
+    max_concurrent_requests: 5
+    rate_limit_per_minute: 60
+    cache_enabled: true
+    cache_ttl: 3600  # seconds
+  
+  # Error handling
+  error_handling:
+    exponential_backoff: true
+    max_backoff_delay: 30
+    circuit_breaker_threshold: 5
+    circuit_breaker_timeout: 300
 
 # Prover Agents
 provers:
   - name: "creative_prover"
-    prompt: "You are a creative problem solver. Generate innovative solutions to the given task."
+    description: "Creative problem solver focused on innovative solutions"
+    prompt: "You are a creative problem solver. Generate innovative solutions to the given task. Focus on novel approaches and think outside the box."
     model: "openai"
     temperature: 0.8
     max_variants: 3
     hyperparameters:
       creativity: 0.9
       detail_level: 0.7
+      innovation_bias: 0.8
+      exploration_rate: 0.6
+    
+    # Specialized capabilities
+    capabilities:
+      - creative_thinking
+      - lateral_problem_solving
+      - innovative_approaches
+      - artistic_solutions
+    
+    # Performance metrics
+    metrics:
+      creativity_score: 0.9
+      innovation_rate: 0.8
+      solution_diversity: 0.7
   
   - name: "analytical_prover"
-    prompt: "You are an analytical problem solver. Generate logical, step-by-step solutions to the given task."
+    description: "Analytical problem solver focused on logical reasoning"
+    prompt: "You are an analytical problem solver. Generate logical, step-by-step solutions to the given task. Focus on systematic analysis and evidence-based approaches."
     model: "openai"
     temperature: 0.3
     max_variants: 3
     hyperparameters:
       logic_score: 0.9
       structure_level: 0.8
+      precision_bias: 0.7
+      systematic_approach: 0.9
+    
+    # Specialized capabilities
+    capabilities:
+      - logical_reasoning
+      - systematic_analysis
+      - evidence_based_solutions
+      - structured_thinking
+    
+    # Performance metrics
+    metrics:
+      accuracy_score: 0.9
+      logical_consistency: 0.8
+      systematic_approach: 0.9
   
+  - name: "xai_grok_prover"
+    description: "XAI Grok-powered agent focused on real-time reasoning and current events"
+    prompt: "You are an XAI Grok-powered agent with access to real-time information. Leverage your ability to process current events and provide up-to-date, contextually aware solutions. Focus on real-time reasoning and current knowledge."
+    model: "xai"
+    temperature: 0.7
+    max_variants: 3
+    hyperparameters:
+      real_time_reasoning: 0.9
+      current_events_awareness: 0.9
+      contextual_understanding: 0.8
+      dynamic_adaptation: 0.8
+    
+    # Specialized capabilities
+    capabilities:
+      - real_time_reasoning
+      - current_events_processing
+      - contextual_adaptation
+      - dynamic_knowledge_integration
+    
+    # Performance metrics
+    metrics:
+      real_time_accuracy: 0.9
+      current_events_relevance: 0.9
+      contextual_adaptation: 0.8
+
+  - name: "mistral_analytical_prover"
+    description: "Mistral AI-powered analytical problem solver with multilingual capabilities"
+    prompt: "You are a Mistral AI-powered analytical problem solver. Leverage your multilingual capabilities and strong reasoning skills to provide comprehensive, well-structured solutions. Focus on analytical depth and cross-cultural understanding."
+    model: "mistral"
+    temperature: 0.4
+    max_variants: 3
+    hyperparameters:
+      analytical_depth: 0.9
+      multilingual_capability: 0.9
+      structured_reasoning: 0.8
+      cross_cultural_understanding: 0.8
+    
+    # Specialized capabilities
+    capabilities:
+      - multilingual_analysis
+      - structured_reasoning
+      - cross_cultural_understanding
+      - analytical_depth
+    
+    # Performance metrics
+    metrics:
+      analytical_accuracy: 0.9
+      multilingual_proficiency: 0.9
+      structured_output: 0.8
+
+  - name: "deepseek_technical_prover"
+    description: "DeepSeek-powered technical specialist with code generation and mathematical reasoning"
+    prompt: "You are a DeepSeek-powered technical specialist. Leverage your strong mathematical reasoning and code generation capabilities to provide technical solutions. Focus on precision, mathematical accuracy, and code quality."
+    model: "deepseek"
+    temperature: 0.3
+    max_variants: 3
+    hyperparameters:
+      mathematical_reasoning: 0.9
+      code_generation: 0.9
+      technical_precision: 0.8
+      algorithmic_thinking: 0.8
+    
+    # Specialized capabilities
+    capabilities:
+      - mathematical_reasoning
+      - code_generation
+      - technical_precision
+      - algorithmic_thinking
+    
+    # Performance metrics
+    metrics:
+      mathematical_accuracy: 0.9
+      code_quality: 0.9
+      technical_precision: 0.8
+
+  - name: "kimi_creative_prover"
+    description: "Kimi-powered creative agent with long-context understanding and creative synthesis"
+    prompt: "You are a Kimi-powered creative agent with exceptional long-context understanding. Leverage your ability to synthesize information across extended contexts and generate creative, comprehensive solutions. Focus on creative synthesis and long-term thinking."
+    model: "kimi"
+    temperature: 0.8
+    max_variants: 3
+    hyperparameters:
+      long_context_understanding: 0.9
+      creative_synthesis: 0.9
+      comprehensive_thinking: 0.8
+      innovative_approaches: 0.8
+    
+    # Specialized capabilities
+    capabilities:
+      - long_context_processing
+      - creative_synthesis
+      - comprehensive_thinking
+      - innovative_approaches
+    
+    # Performance metrics
+    metrics:
+      long_context_accuracy: 0.9
+      creative_synthesis_quality: 0.9
+      comprehensive_coverage: 0.8
+
   - name: "practical_prover"
-    prompt: "You are a practical problem solver. Generate realistic, implementable solutions to the given task."
-    model: "anthropic"
+    description: "Practical problem solver focused on implementable solutions"
+    prompt: "You are a practical problem solver. Generate realistic, implementable solutions to the given task. Focus on feasibility and practical considerations."
+    model: "openai"
     temperature: 0.5
     max_variants: 3
     hyperparameters:
       feasibility: 0.9
       cost_efficiency: 0.8
+      practical_considerations: 0.9
+      implementation_focus: 0.8
+    
+    # Specialized capabilities
+    capabilities:
+      - practical_implementation
+      - resource_optimization
+      - cost_analysis
+      - feasibility_assessment
+    
+    # Performance metrics
+    metrics:
+      feasibility_score: 0.9
+      implementation_ready: 0.8
+      cost_efficiency: 0.8
+  
+  - name: "strategic_prover"
+    description: "Strategic thinker focused on long-term planning"
+    prompt: "You are a strategic thinker. Generate solutions that consider long-term implications, stakeholder needs, and strategic objectives."
+    model: "openai"
+    temperature: 0.6
+    max_variants: 3
+    hyperparameters:
+      strategic_thinking: 0.9
+      stakeholder_consideration: 0.8
+      long_term_planning: 0.9
+      risk_assessment: 0.8
+    
+    # Specialized capabilities
+    capabilities:
+      - strategic_planning
+      - stakeholder_analysis
+      - risk_assessment
+      - long_term_thinking
+    
+    # Performance metrics
+    metrics:
+      strategic_vision: 0.9
+      stakeholder_alignment: 0.8
+      risk_awareness: 0.8
+  
+  - name: "technical_prover"
+    description: "Technical specialist focused on engineering solutions"
+    prompt: "You are a technical specialist. Generate solutions that leverage engineering principles, technical best practices, and system design."
+    model: "deepseek"
+    temperature: 0.4
+    max_variants: 3
+    hyperparameters:
+      technical_expertise: 0.9
+      engineering_principles: 0.8
+      system_design: 0.8
+      scalability_focus: 0.7
+    
+    # Specialized capabilities
+    capabilities:
+      - technical_design
+      - system_architecture
+      - engineering_principles
+      - scalability_considerations
+    
+    # Performance metrics
+    metrics:
+      technical_accuracy: 0.9
+      design_quality: 0.8
+      scalability_score: 0.8
+
+  - name: "glm_engineering_prover"
+    description: "GLM 4.5-powered engineering specialist for advanced code generation and system design"
+    prompt: "You are a GLM 4.5-powered engineering specialist. Generate innovative, practical solutions for complex technical challenges. Focus on modern best practices, scalability, and maintainable code architecture."
+    model: "glm"
+    temperature: 0.3
+    max_variants: 3
+    hyperparameters:
+      technical_expertise: 0.95
+      engineering_principles: 0.9
+      system_design: 0.9
+      scalability_focus: 0.8
+      innovation_bias: 0.8
+    
+    # Specialized capabilities
+    capabilities:
+      - advanced_code_generation
+      - system_architecture
+      - engineering_principles
+      - scalability_considerations
+      - modern_best_practices
+      - innovative_solutions
+    
+    # Performance metrics
+    metrics:
+      technical_accuracy: 0.95
+      design_quality: 0.9
+      scalability_score: 0.9
+      innovation_score: 0.8
 
 # Evaluator Agents
 evaluators:
   - name: "quality_evaluator"
-    prompt: "Evaluate the quality of the given solution based on completeness, accuracy, and relevance."
+    description: "Comprehensive quality evaluator"
+    prompt: "Evaluate the quality of the given solution based on completeness, accuracy, and relevance. Provide detailed feedback with specific improvement suggestions."
     model: "openai"
     temperature: 0.2
     hyperparameters:
       weight_completeness: 0.4
       weight_accuracy: 0.4
       weight_relevance: 0.2
+      evaluation_depth: 0.9
+      feedback_quality: 0.8
+    
+    # Evaluation focus
+    evaluation_focus:
+      - completeness_assessment
+      - accuracy_verification
+      - relevance_checking
+      - improvement_suggestions
+    
+    # Performance metrics
+    metrics:
+      evaluation_accuracy: 0.9
+      feedback_quality: 0.8
+      consistency_score: 0.8
   
+  - name: "xai_realtime_evaluator"
+    description: "XAI Grok-powered real-time evaluator with current context awareness"
+    prompt: "Evaluate the given solution considering current events and real-time context. Assess relevance to current situations and dynamic adaptability."
+    model: "xai"
+    temperature: 0.3
+    hyperparameters:
+      weight_current_relevance: 0.6
+      weight_contextual_adaptation: 0.4
+      real_time_awareness: 0.9
+      dynamic_evaluation: 0.8
+    
+    # Evaluation focus
+    evaluation_focus:
+      - current_relevance_assessment
+      - contextual_adaptation
+      - real_time_awareness
+      - dynamic_evaluation
+    
+    # Performance metrics
+    metrics:
+      current_relevance: 0.9
+      contextual_adaptation: 0.8
+      real_time_accuracy: 0.8
+
+  - name: "mistral_multilingual_evaluator"
+    description: "Mistral AI-powered multilingual evaluator with cross-cultural understanding"
+    prompt: "Evaluate the given solution considering multilingual and cross-cultural perspectives. Assess cultural sensitivity and global applicability."
+    model: "mistral"
+    temperature: 0.3
+    hyperparameters:
+      weight_cultural_sensitivity: 0.5
+      weight_global_applicability: 0.5
+      multilingual_understanding: 0.9
+      cross_cultural_awareness: 0.8
+    
+    # Evaluation focus
+    evaluation_focus:
+      - cultural_sensitivity_assessment
+      - global_applicability
+      - multilingual_understanding
+      - cross_cultural_evaluation
+    
+    # Performance metrics
+    metrics:
+      cultural_sensitivity: 0.9
+      global_applicability: 0.8
+      multilingual_accuracy: 0.8
+
+  - name: "deepseek_technical_evaluator"
+    description: "DeepSeek-powered technical evaluator with mathematical precision"
+    prompt: "Evaluate the technical accuracy and mathematical correctness of the given solution. Assess code quality, algorithmic efficiency, and mathematical precision."
+    model: "deepseek"
+    temperature: 0.1
+    hyperparameters:
+      weight_mathematical_accuracy: 0.5
+      weight_code_quality: 0.3
+      weight_algorithmic_efficiency: 0.2
+      technical_precision: 0.9
+      mathematical_rigor: 0.8
+    
+    # Evaluation focus
+    evaluation_focus:
+      - mathematical_accuracy
+      - code_quality_assessment
+      - algorithmic_efficiency
+      - technical_precision
+    
+    # Performance metrics
+    metrics:
+      mathematical_accuracy: 0.9
+      code_quality: 0.8
+      algorithmic_efficiency: 0.8
+
+  - name: "kimi_comprehensive_evaluator"
+    description: "Kimi-powered comprehensive evaluator with long-context understanding"
+    prompt: "Evaluate the given solution considering comprehensive context and long-term implications. Assess depth of understanding and comprehensive coverage."
+    model: "kimi"
+    temperature: 0.3
+    hyperparameters:
+      weight_comprehensive_coverage: 0.6
+      weight_long_term_implications: 0.4
+      long_context_understanding: 0.9
+      comprehensive_analysis: 0.8
+    
+    # Evaluation focus
+    evaluation_focus:
+      - comprehensive_coverage
+      - long_term_implications
+      - depth_of_understanding
+      - contextual_completeness
+    
+    # Performance metrics
+    metrics:
+      comprehensive_coverage: 0.9
+      long_term_insight: 0.8
+      depth_of_understanding: 0.8
+
   - name: "creativity_evaluator"
-    prompt: "Evaluate the creativity and innovation of the given solution."
-    model: "anthropic"
+    description: "Creativity and innovation evaluator"
+    prompt: "Evaluate the creativity and innovation of the given solution. Assess originality, novelty, and creative thinking."
+    model: "openai"
     temperature: 0.3
     hyperparameters:
       weight_novelty: 0.5
       weight_originality: 0.5
+      creativity_sensitivity: 0.9
+      innovation_recognition: 0.8
+    
+    # Evaluation focus
+    evaluation_focus:
+      - novelty_assessment
+      - originality_evaluation
+      - creative_thinking
+      - innovation_quality
+    
+    # Performance metrics
+    metrics:
+      creativity_recognition: 0.9
+      innovation_sensitivity: 0.8
+      originality_assessment: 0.8
+  
+  - name: "feasibility_evaluator"
+    description: "Feasibility and implementation evaluator"
+    prompt: "Evaluate the feasibility and implementation readiness of the given solution. Assess practical considerations, resource requirements, and implementation challenges."
+    model: "openai"
+    temperature: 0.2
+    hyperparameters:
+      weight_feasibility: 0.6
+      weight_implementation: 0.4
+      practical_assessment: 0.9
+      resource_evaluation: 0.8
+    
+    # Evaluation focus
+    evaluation_focus:
+      - feasibility_assessment
+      - implementation_readiness
+      - resource_requirements
+      - risk_evaluation
+    
+    # Performance metrics
+    metrics:
+      feasibility_accuracy: 0.9
+      implementation_insight: 0.8
+      risk_assessment: 0.8
+  
+  - name: "technical_evaluator"
+    description: "Technical quality and correctness evaluator"
+    prompt: "Evaluate the technical quality and correctness of the given solution. Assess technical accuracy, best practices, and engineering principles."
+    model: "deepseek"
+    temperature: 0.1
+    hyperparameters:
+      weight_technical_accuracy: 0.5
+      weight_best_practices: 0.3
+      weight_engineering_principles: 0.2
+      technical_depth: 0.9
+      precision_focus: 0.8
+    
+    # Evaluation focus
+    evaluation_focus:
+      - technical_accuracy
+      - best_practices_compliance
+      - engineering_principles
+      - technical_depth
+    
+    # Performance metrics
+    metrics:
+      technical_accuracy: 0.9
+      best_practices_knowledge: 0.8
+      engineering_insight: 0.8
 
 # Refiner Agents
 refiners:
   - name: "mutation_refiner"
-    prompt: "Analyze the given solution and suggest targeted improvements based on its weaknesses."
+    description: "Targeted improvement refiner"
+    prompt: "Analyze the given solution and suggest targeted improvements based on its weaknesses. Focus on specific areas for enhancement."
     model: "openai"
     temperature: 0.6
     hyperparameters:
       mutation_strength: 0.3
       focus_areas: ["clarity", "efficiency", "completeness"]
+      improvement_targeting: 0.8
+      enhancement_quality: 0.7
+    
+    # Refinement capabilities
+    capabilities:
+      - weakness_identification
+      - targeted_improvements
+      - enhancement_suggestions
+      - optimization_focus
+    
+    # Performance metrics
+    metrics:
+      improvement_quality: 0.8
+      targeting_accuracy: 0.8
+      enhancement_effectiveness: 0.7
   
   - name: "crossover_refiner"
-    prompt: "Combine the best elements from multiple solutions to create an improved hybrid solution."
-    model: "anthropic"
+    description: "Solution combination refiner"
+    prompt: "Combine the best elements from multiple solutions to create an improved hybrid solution. Focus on synergistic combinations."
+    model: "kimi"
     temperature: 0.5
     hyperparameters:
       crossover_points: 3
       balance_ratio: 0.6
+      synergy_focus: 0.8
+      combination_quality: 0.7
+    
+    # Refinement capabilities
+    capabilities:
+      - solution_combination
+      - synergy_identification
+      - hybrid_creation
+      - balance_optimization
+    
+    # Performance metrics
+    metrics:
+      combination_quality: 0.8
+      synergy_creation: 0.8
+      balance_achievement: 0.7
+  
+  - name: "optimization_refiner"
+    description: "Performance optimization refiner"
+    prompt: "Optimize the given solution for better performance, efficiency, and effectiveness. Focus on measurable improvements."
+    model: "openai"
+    temperature: 0.4
+    hyperparameters:
+      optimization_focus: 0.9
+      efficiency_targeting: 0.8
+      performance_metrics: 0.8
+      measurable_improvements: 0.7
+    
+    # Refinement capabilities
+    capabilities:
+      - performance_optimization
+      - efficiency_improvement
+      - measurable_enhancements
+      - optimization_targeting
+    
+    # Performance metrics
+    metrics:
+      optimization_effectiveness: 0.8
+      efficiency_improvement: 0.8
+      measurable_gains: 0.7
+  
+  - name: "clarity_refiner"
+    description: "Communication and clarity refiner"
+    prompt: "Improve the clarity, communication, and presentation of the given solution. Focus on better understanding and accessibility."
+    model: "anthropic"
+    temperature: 0.5
+    hyperparameters:
+      clarity_focus: 0.9
+      communication_quality: 0.8
+      accessibility_improvement: 0.8
+      presentation_enhancement: 0.7
+    
+    # Refinement capabilities
+    capabilities:
+      - clarity_improvement
+      - communication_enhancement
+      - accessibility_optimization
+      - presentation_refinement
+    
+    # Performance metrics
+    metrics:
+      clarity_improvement: 0.8
+      communication_quality: 0.8
+      accessibility_score: 0.7
+
+# Agent Performance Monitoring
+agent_monitoring:
+  # Performance tracking
+  performance_tracking:
+    enabled: true
+    metrics_interval: 60  # seconds
+    performance_history: 1000  # entries
+    
+  # Quality metrics
+  quality_metrics:
+    success_rate: 0.8
+    accuracy_threshold: 0.7
+    consistency_score: 0.8
+    reliability_target: 0.9
+  
+  # Adaptive behavior
+  adaptive_behavior:
+    enabled: true
+    learning_rate: 0.01
+    adaptation_threshold: 0.1
+    performance_decay: 0.95
+  
+  # Resource management
+  resource_management:
+    max_memory_usage: 0.8
+    max_cpu_usage: 0.8
+    max_concurrent_agents: 10
+    load_balancing: true

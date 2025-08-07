@@ -1,0 +1,16 @@
+name: generative_ai
+description: Generate text with any supported LLM provider.
+endpoint: https://stub.invalid/generate
+method: POST
+parameters:
+  prompt:
+    type: string
+    description: The input prompt
+  provider:
+    type: string
+    description: openai or gemini
+  api_key:
+    type: string
+    description: API key for chosen provider
+response:
+  type: text

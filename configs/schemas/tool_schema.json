@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["name", "description", "parameters"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique name of the tool"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the tool"
+    },
+    "version": {
+      "type": "string",
+      "description": "Tool version"
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Tool parameters schema",
+      "additionalProperties": true
+    },
+    "required_parameters": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of required parameter names"
+    },
+    "optional_parameters": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of optional parameter names"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorizing the tool"
+    },
+    "timeout": {
+      "type": "number",
+      "description": "Default timeout in seconds"
+    },
+    "rate_limit": {
+      "type": "object",
+      "properties": {
+        "requests_per_minute": {
+          "type": "number"
+        },
+        "requests_per_hour": {
+          "type": "number"
+        }
+      }
+    }
+  }
+} 

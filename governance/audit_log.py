@@ -9,12 +9,16 @@ import sqlite3
 import os
 import difflib
 import hashlib
+from concurrent.futures import ThreadPoolExecutor
+import aiosqlite
+from contextlib import asynccontextmanager
 
 logger = structlog.get_logger()
 
 
 class AuditEventType(Enum):
     TASK_SUBMITTED = "task_submitted"
+    TASK_COMPLETED = "task_completed"
     PLAN_GENERATED = "plan_generated"
     PLAN_EVALUATED = "plan_evaluated"
     PLAN_MODIFIED = "plan_modified"
@@ -63,7 +67,7 @@ class PlanDiff:
 
 
 class AuditLog:
-    """Logs plan diffs, scores, hits/misses, and interventions."""
+    """Logs plan diffs, scores, hits/misses, and interventions with async support."""
     
     def __init__(self, db_path: str = "./memory/audit_log.db"):
         self.db_path = db_path
@@ -71,84 +75,91 @@ class AuditLog:
         self.event_buffer = []
         self.buffer_size = 100
         self.flush_interval = 30  # seconds
+        self.max_buffer_size = 1000  # Prevent memory issues
+        self._initialized = False
         
-        # Initialize database
-        self._initialize_database()
+        # Thread pool for CPU-intensive operations
+        self.thread_pool = ThreadPoolExecutor(max_workers=4)
         
         # Start background flush task
         self._start_flush_task()
         
         logger.info("Audit log initialized", db_path=db_path)
     
-    def _initialize_database(self):
-        """Initialize the audit log database."""
+    async def initialize(self):
+        """Initialize the database asynchronously."""
+        if not self._initialized:
+            await self._initialize_database_async()
+            self._initialized = True
+    
+    async def _initialize_database_async(self):
+        """Initialize the audit log database asynchronously."""
         try:
             # Create directory if it doesn't exist
             os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+            async with aiosqlite.connect(self.db_path) as conn:
+                # Create audit events table
+                await conn.execute('''
+                    CREATE TABLE IF NOT EXISTS audit_events (
+                        event_id TEXT PRIMARY KEY,
+                        event_type TEXT NOT NULL,
+                        timestamp TEXT NOT NULL,
+                        agent_id TEXT,
+                        task_id TEXT NOT NULL,
+                        session_id TEXT NOT NULL,
+                        description TEXT NOT NULL,
+                        details TEXT DEFAULT '{}',
+                        severity TEXT DEFAULT 'info',
+                        user_id TEXT,
+                        ip_address TEXT
+                    )
+                ''')
+                
+                # Create plan diffs table
+                await conn.execute('''
+                    CREATE TABLE IF NOT EXISTS plan_diffs (
+                        diff_id TEXT PRIMARY KEY,
+                        plan_id TEXT NOT NULL,
+                        version_from TEXT NOT NULL,
+                        version_to TEXT NOT NULL,
+                        timestamp TEXT NOT NULL,
+                        changes TEXT DEFAULT '[]',
+                        similarity_score REAL DEFAULT 0.0,
+                        change_summary TEXT DEFAULT '',
+                        task_id TEXT,
+                        FOREIGN KEY (task_id) REFERENCES audit_events (task_id)
+                    )
+                ''')
+                
+                # Create performance metrics table
+                await conn.execute('''
+                    CREATE TABLE IF NOT EXISTS performance_metrics (
+                        metric_id TEXT PRIMARY KEY,
+                        timestamp TEXT NOT NULL,
+                        metric_name TEXT NOT NULL,
+                        metric_value REAL NOT NULL,
+                        agent_id TEXT,
+                        task_id TEXT,
+                        session_id TEXT,
+                        metadata TEXT DEFAULT '{}'
+                    )
+                ''')
+                
+                # Create indexes
+                await conn.execute('CREATE INDEX IF NOT EXISTS idx_events_timestamp ON audit_events(timestamp)')
+                await conn.execute('CREATE INDEX IF NOT EXISTS idx_events_type ON audit_events(event_type)')
+                await conn.execute('CREATE INDEX IF NOT EXISTS idx_events_agent ON audit_events(agent_id)')
+                await conn.execute('CREATE INDEX IF NOT EXISTS idx_events_task ON audit_events(task_id)')
+                await conn.execute('CREATE INDEX IF NOT EXISTS idx_events_session ON audit_events(session_id)')
+                await conn.execute('CREATE INDEX IF NOT EXISTS idx_diffs_plan ON plan_diffs(plan_id)')
+                await conn.execute('CREATE INDEX IF NOT EXISTS idx_diffs_timestamp ON plan_diffs(timestamp)')
+                await conn.execute('CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON performance_metrics(timestamp)')
+                await conn.execute('CREATE INDEX IF NOT EXISTS idx_metrics_name ON performance_metrics(metric_name)')
+                
+                await conn.commit()
             
-            # Create audit events table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS audit_events (
-                    event_id TEXT PRIMARY KEY,
-                    event_type TEXT NOT NULL,
-                    timestamp TEXT NOT NULL,
-                    agent_id TEXT,
-                    task_id TEXT NOT NULL,
-                    session_id TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    details TEXT DEFAULT '{}',
-                    severity TEXT DEFAULT 'info',
-                    user_id TEXT,
-                    ip_address TEXT
-                )
-            ''')
-            
-            # Create plan diffs table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS plan_diffs (
-                    diff_id TEXT PRIMARY KEY,
-                    plan_id TEXT NOT NULL,
-                    version_from TEXT NOT NULL,
-                    version_to TEXT NOT NULL,
-                    timestamp TEXT NOT NULL,
-                    changes TEXT DEFAULT '[]',
-                    similarity_score REAL DEFAULT 0.0,
-                    change_summary TEXT DEFAULT '',
-                    task_id TEXT,
-                    FOREIGN KEY (task_id) REFERENCES audit_events (task_id)
-                )
-            ''')
-            
-            # Create performance metrics table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS performance_metrics (
-                    metric_id TEXT PRIMARY KEY,
-                    timestamp TEXT NOT NULL,
-                    metric_name TEXT NOT NULL,
-                    metric_value REAL NOT NULL,
-                    agent_id TEXT,
-                    task_id TEXT,
-                    session_id TEXT,
-                    metadata TEXT DEFAULT '{}'
-                )
-            ''')
-            
-            # Create indexes
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_events_timestamp ON audit_events(timestamp)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_events_type ON audit_events(event_type)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_events_agent ON audit_events(agent_id)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_events_task ON audit_events(task_id)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_events_session ON audit_events(session_id)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_diffs_plan ON plan_diffs(plan_id)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_diffs_timestamp ON plan_diffs(timestamp)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON performance_metrics(timestamp)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_metrics_name ON performance_metrics(metric_name)')
-            
-            conn.commit()
-            conn.close()
+            logger.info("Audit log database initialized successfully")
             
         except Exception as e:
             logger.error("Failed to initialize audit log database", error=str(e))
@@ -235,8 +246,15 @@ class AuditLog:
             # Add to buffer
             self.event_buffer.append(event)
             
+            # Prevent buffer overflow
+            if len(self.event_buffer) > self.max_buffer_size:
+                logger.warning("Audit buffer overflow, forcing flush", 
+                             buffer_size=len(self.event_buffer),
+                             max_size=self.max_buffer_size)
+                asyncio.create_task(self.flush_events())
+            
             # Flush if buffer is full
-            if len(self.event_buffer) >= self.buffer_size:
+            elif len(self.event_buffer) >= self.buffer_size:
                 asyncio.create_task(self.flush_events())
             
             return event_id
@@ -246,7 +264,7 @@ class AuditLog:
             return ""
     
     async def flush_events(self):
-        """Flush buffered events to database."""
+        """Flush buffered events to database asynchronously."""
         if not self.event_buffer:
             return
         
@@ -254,31 +272,28 @@ class AuditLog:
             events_to_flush = self.event_buffer.copy()
             self.event_buffer.clear()
             
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            for event in events_to_flush:
-                cursor.execute('''
-                    INSERT INTO audit_events 
-                    (event_id, event_type, timestamp, agent_id, task_id, session_id, 
-                     description, details, severity, user_id, ip_address)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    event.event_id,
-                    event.event_type.value,
-                    event.timestamp.isoformat(),
-                    event.agent_id,
-                    event.task_id,
-                    event.session_id,
-                    event.description,
-                    json.dumps(event.details),
-                    event.severity,
-                    event.user_id,
-                    event.ip_address
-                ))
-            
-            conn.commit()
-            conn.close()
+            async with aiosqlite.connect(self.db_path) as conn:
+                for event in events_to_flush:
+                    await conn.execute('''
+                        INSERT INTO audit_events 
+                        (event_id, event_type, timestamp, agent_id, task_id, session_id, 
+                         description, details, severity, user_id, ip_address)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        event.event_id,
+                        event.event_type.value,
+                        event.timestamp.isoformat(),
+                        event.agent_id,
+                        event.task_id,
+                        event.session_id,
+                        event.description,
+                        json.dumps(event.details),
+                        event.severity,
+                        event.user_id,
+                        event.ip_address
+                    ))
+                
+                await conn.commit()
             
             logger.debug("Audit events flushed", count=len(events_to_flush))
             
@@ -287,18 +302,29 @@ class AuditLog:
             # Put events back in buffer
             self.event_buffer.extend(events_to_flush)
     
-    def log_plan_diff(self, plan_id: str, version_from: str, version_to: str,
+    async def log_plan_diff(self, plan_id: str, version_from: str, version_to: str,
                      old_content: str, new_content: str, task_id: str = None) -> str:
-        """Log differences between plan versions."""
+        """Log differences between plan versions asynchronously."""
         try:
             # Generate diff ID
             diff_id = f"diff_{plan_id}_{version_from}_{version_to}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
             
-            # Calculate differences
-            changes = self._calculate_text_diff(old_content, new_content)
+            # Calculate differences in thread pool
+            loop = asyncio.get_event_loop()
+            changes = await loop.run_in_executor(
+                self.thread_pool, 
+                self._calculate_text_diff, 
+                old_content, 
+                new_content
+            )
             
-            # Calculate similarity score
-            similarity_score = self._calculate_similarity(old_content, new_content)
+            # Calculate similarity score in thread pool
+            similarity_score = await loop.run_in_executor(
+                self.thread_pool,
+                self._calculate_similarity,
+                old_content,
+                new_content
+            )
             
             # Generate change summary
             change_summary = self._generate_change_summary(changes)
@@ -314,29 +340,26 @@ class AuditLog:
                 change_summary=change_summary
             )
             
-            # Save to database
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT INTO plan_diffs 
-                (diff_id, plan_id, version_from, version_to, timestamp, changes, 
-                 similarity_score, change_summary, task_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                diff_id,
-                plan_diff.plan_id,
-                plan_diff.version_from,
-                plan_diff.version_to,
-                plan_diff.timestamp.isoformat(),
-                json.dumps(plan_diff.changes),
-                plan_diff.similarity_score,
-                plan_diff.change_summary,
-                task_id
-            ))
-            
-            conn.commit()
-            conn.close()
+            # Save to database asynchronously
+            async with aiosqlite.connect(self.db_path) as conn:
+                await conn.execute('''
+                    INSERT INTO plan_diffs 
+                    (diff_id, plan_id, version_from, version_to, timestamp, changes, 
+                     similarity_score, change_summary, task_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    diff_id,
+                    plan_diff.plan_id,
+                    plan_diff.version_from,
+                    plan_diff.version_to,
+                    plan_diff.timestamp.isoformat(),
+                    json.dumps(plan_diff.changes),
+                    plan_diff.similarity_score,
+                    plan_diff.change_summary,
+                    task_id
+                ))
+                
+                await conn.commit()
             
             # Log as audit event
             self.log_event(
@@ -452,35 +475,32 @@ class AuditLog:
             logger.error("Failed to generate change summary", error=str(e))
             return "Change summary unavailable"
     
-    def log_metric(self, metric_name: str, metric_value: float, 
+    async def log_metric(self, metric_name: str, metric_value: float, 
                   agent_id: str = None, task_id: str = None,
                   metadata: Dict[str, Any] = None) -> str:
-        """Log a performance metric."""
+        """Log a performance metric asynchronously."""
         try:
             # Generate metric ID
             metric_id = f"metric_{metric_name}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
             
-            # Save to database
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT INTO performance_metrics 
-                (metric_id, timestamp, metric_name, metric_value, agent_id, task_id, session_id, metadata)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                metric_id,
-                datetime.now().isoformat(),
-                metric_name,
-                metric_value,
-                agent_id,
-                task_id,
-                self.current_session,
-                json.dumps(metadata or {})
-            ))
-            
-            conn.commit()
-            conn.close()
+            # Save to database asynchronously
+            async with aiosqlite.connect(self.db_path) as conn:
+                await conn.execute('''
+                    INSERT INTO performance_metrics 
+                    (metric_id, timestamp, metric_name, metric_value, agent_id, task_id, session_id, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    metric_id,
+                    datetime.now().isoformat(),
+                    metric_name,
+                    metric_value,
+                    agent_id,
+                    task_id,
+                    self.current_session,
+                    json.dumps(metadata or {})
+                ))
+                
+                await conn.commit()
             
             return metric_id
             
@@ -494,43 +514,40 @@ class AuditLog:
                        start_time: datetime = None, end_time: datetime = None) -> List[AuditEvent]:
         """Get audit events with optional filtering."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            # Build query
-            query = "SELECT * FROM audit_events WHERE 1=1"
-            params = []
-            
-            if event_type:
-                query += " AND event_type = ?"
-                params.append(event_type.value)
-            
-            if agent_id:
-                query += " AND agent_id = ?"
-                params.append(agent_id)
-            
-            if task_id:
-                query += " AND task_id = ?"
-                params.append(task_id)
-            
-            if session_id:
-                query += " AND session_id = ?"
-                params.append(session_id)
-            
-            if start_time:
-                query += " AND timestamp >= ?"
-                params.append(start_time.isoformat())
-            
-            if end_time:
-                query += " AND timestamp <= ?"
-                params.append(end_time.isoformat())
-            
-            query += " ORDER BY timestamp DESC LIMIT ?"
-            params.append(limit)
-            
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-            conn.close()
+            async with aiosqlite.connect(self.db_path) as conn:
+                # Build query
+                query = "SELECT * FROM audit_events WHERE 1=1"
+                params = []
+                
+                if event_type:
+                    query += " AND event_type = ?"
+                    params.append(event_type.value)
+                
+                if agent_id:
+                    query += " AND agent_id = ?"
+                    params.append(agent_id)
+                
+                if task_id:
+                    query += " AND task_id = ?"
+                    params.append(task_id)
+                
+                if session_id:
+                    query += " AND session_id = ?"
+                    params.append(session_id)
+                
+                if start_time:
+                    query += " AND timestamp >= ?"
+                    params.append(start_time.isoformat())
+                
+                if end_time:
+                    query += " AND timestamp <= ?"
+                    params.append(end_time.isoformat())
+                
+                query += " ORDER BY timestamp DESC LIMIT ?"
+                params.append(limit)
+                
+                cursor = await conn.execute(query, params)
+                rows = await cursor.fetchall()
             
             # Convert to AuditEvent objects
             events = []
@@ -559,20 +576,17 @@ class AuditLog:
     async def get_plan_history(self, plan_id: str, limit: int = 50) -> List[PlanDiff]:
         """Get the history of changes for a plan."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT diff_id, plan_id, version_from, version_to, timestamp, 
-                       changes, similarity_score, change_summary, task_id
-                FROM plan_diffs
-                WHERE plan_id = ?
-                ORDER BY timestamp DESC
-                LIMIT ?
-            ''', (plan_id, limit))
-            
-            rows = cursor.fetchall()
-            conn.close()
+            async with aiosqlite.connect(self.db_path) as conn:
+                cursor = await conn.execute('''
+                    SELECT diff_id, plan_id, version_from, version_to, timestamp, 
+                           changes, similarity_score, change_summary, task_id
+                    FROM plan_diffs
+                    WHERE plan_id = ?
+                    ORDER BY timestamp DESC
+                    LIMIT ?
+                ''', (plan_id, limit))
+                
+                rows = await cursor.fetchall()
             
             # Convert to PlanDiff objects
             diffs = []
@@ -598,31 +612,28 @@ class AuditLog:
                         task_id: str = None, limit: int = 100) -> List[Dict[str, Any]]:
         """Get performance metrics."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            # Build query
-            query = "SELECT * FROM performance_metrics WHERE 1=1"
-            params = []
-            
-            if metric_name:
-                query += " AND metric_name = ?"
-                params.append(metric_name)
-            
-            if agent_id:
-                query += " AND agent_id = ?"
-                params.append(agent_id)
-            
-            if task_id:
-                query += " AND task_id = ?"
-                params.append(task_id)
-            
-            query += " ORDER BY timestamp DESC LIMIT ?"
-            params.append(limit)
-            
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-            conn.close()
+            async with aiosqlite.connect(self.db_path) as conn:
+                # Build query
+                query = "SELECT * FROM performance_metrics WHERE 1=1"
+                params = []
+                
+                if metric_name:
+                    query += " AND metric_name = ?"
+                    params.append(metric_name)
+                
+                if agent_id:
+                    query += " AND agent_id = ?"
+                    params.append(agent_id)
+                
+                if task_id:
+                    query += " AND task_id = ?"
+                    params.append(task_id)
+                
+                query += " ORDER BY timestamp DESC LIMIT ?"
+                params.append(limit)
+                
+                cursor = await conn.execute(query, params)
+                rows = await cursor.fetchall()
             
             # Convert to dictionaries
             metrics = []
@@ -648,45 +659,34 @@ class AuditLog:
     async def get_audit_statistics(self) -> Dict[str, Any]:
         """Get audit log statistics."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            # Get event counts by type
-            cursor.execute('''
-                SELECT event_type, COUNT(*) 
-                FROM audit_events 
-                GROUP BY event_type
-            ''')
-            event_counts = {row[0]: row[1] for row in cursor.fetchall()}
-            
-            # Get total events
-            cursor.execute('SELECT COUNT(*) FROM audit_events')
-            total_events = cursor.fetchone()[0]
-            
-            # Get total plan diffs
-            cursor.execute('SELECT COUNT(*) FROM plan_diffs')
-            total_diffs = cursor.fetchone()[0]
-            
-            # Get total metrics
-            cursor.execute('SELECT COUNT(*) FROM performance_metrics')
-            total_metrics = cursor.fetchone()[0]
-            
-            # Get event counts by severity
-            cursor.execute('''
-                SELECT severity, COUNT(*) 
-                FROM audit_events 
-                GROUP BY severity
-            ''')
-            severity_counts = {row[0]: row[1] for row in cursor.fetchall()}
-            
-            conn.close()
+            async with aiosqlite.connect(self.db_path) as conn:
+                # Execute all queries concurrently
+                queries = [
+                    ('event_counts', 'SELECT event_type, COUNT(*) FROM audit_events GROUP BY event_type'),
+                    ('total_events', 'SELECT COUNT(*) FROM audit_events'),
+                    ('total_diffs', 'SELECT COUNT(*) FROM plan_diffs'),
+                    ('total_metrics', 'SELECT COUNT(*) FROM performance_metrics'),
+                    ('severity_counts', 'SELECT severity, COUNT(*) FROM audit_events GROUP BY severity')
+                ]
+                
+                results = {}
+                for name, query in queries:
+                    cursor = await conn.execute(query)
+                    if name == 'event_counts':
+                        results[name] = {row[0]: row[1] for row in await cursor.fetchall()}
+                    elif name == 'severity_counts':
+                        results[name] = {row[0]: row[1] for row in await cursor.fetchall()}
+                    else:
+                        results[name] = (await cursor.fetchone())[0]
             
             return {
-                "total_events": total_events,
-                "total_plan_diffs": total_diffs,
-                "total_metrics": total_metrics,
-                "event_counts_by_type": event_counts,
-                "event_counts_by_severity": severity_counts,
+                "total_events": results.get('total_events', 0),
+                "total_plan_diffs": results.get('total_diffs', 0),
+                "total_metrics": results.get('total_metrics', 0),
+                "event_counts_by_type": results.get('event_counts', {}),
+                "event_counts_by_severity": results.get('severity_counts', {}),
+                "buffer_size": len(self.event_buffer),
+                "max_buffer_size": self.max_buffer_size,
                 "generated_at": datetime.now().isoformat()
             }
             
@@ -700,23 +700,20 @@ class AuditLog:
             cutoff_date = datetime.now() - timedelta(days=days_to_keep)
             cutoff_str = cutoff_date.isoformat()
             
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            # Clean up old events
-            cursor.execute('DELETE FROM audit_events WHERE timestamp < ?', (cutoff_str,))
-            events_deleted = cursor.rowcount
-            
-            # Clean up old plan diffs
-            cursor.execute('DELETE FROM plan_diffs WHERE timestamp < ?', (cutoff_str,))
-            diffs_deleted = cursor.rowcount
-            
-            # Clean up old metrics
-            cursor.execute('DELETE FROM performance_metrics WHERE timestamp < ?', (cutoff_str,))
-            metrics_deleted = cursor.rowcount
-            
-            conn.commit()
-            conn.close()
+            async with aiosqlite.connect(self.db_path) as conn:
+                # Clean up old events
+                await conn.execute('DELETE FROM audit_events WHERE timestamp < ?', (cutoff_str,))
+                events_deleted = (await conn.execute('SELECT changes()')).rowcount
+                
+                # Clean up old plan diffs
+                await conn.execute('DELETE FROM plan_diffs WHERE timestamp < ?', (cutoff_str,))
+                diffs_deleted = (await conn.execute('SELECT changes()')).rowcount
+                
+                # Clean up old metrics
+                await conn.execute('DELETE FROM performance_metrics WHERE timestamp < ?', (cutoff_str,))
+                metrics_deleted = (await conn.execute('SELECT changes()')).rowcount
+                
+                await conn.commit()
             
             logger.info("Audit data cleanup completed", 
                        events_deleted=events_deleted,
@@ -743,39 +740,36 @@ class AuditLog:
             events = await self.get_events(start_time=start_time, end_time=end_time, limit=10000)
             
             # Get plan diffs
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            query = "SELECT * FROM plan_diffs WHERE 1=1"
-            params = []
-            
-            if start_time:
-                query += " AND timestamp >= ?"
-                params.append(start_time.isoformat())
-            
-            if end_time:
-                query += " AND timestamp <= ?"
-                params.append(end_time.isoformat())
-            
-            cursor.execute(query, params)
-            diff_rows = cursor.fetchall()
+            async with aiosqlite.connect(self.db_path) as conn:
+                query = "SELECT * FROM plan_diffs WHERE 1=1"
+                params = []
+                
+                if start_time:
+                    query += " AND timestamp >= ?"
+                    params.append(start_time.isoformat())
+                
+                if end_time:
+                    query += " AND timestamp <= ?"
+                    params.append(end_time.isoformat())
+                
+                cursor = await conn.execute(query, params)
+                diff_rows = await cursor.fetchall()
             
             # Get metrics
-            query = "SELECT * FROM performance_metrics WHERE 1=1"
-            params = []
-            
-            if start_time:
-                query += " AND timestamp >= ?"
-                params.append(start_time.isoformat())
-            
-            if end_time:
-                query += " AND timestamp <= ?"
-                params.append(end_time.isoformat())
-            
-            cursor.execute(query, params)
-            metric_rows = cursor.fetchall()
-            
-            conn.close()
+            async with aiosqlite.connect(self.db_path) as conn:
+                query = "SELECT * FROM performance_metrics WHERE 1=1"
+                params = []
+                
+                if start_time:
+                    query += " AND timestamp >= ?"
+                    params.append(start_time.isoformat())
+                
+                if end_time:
+                    query += " AND timestamp <= ?"
+                    params.append(end_time.isoformat())
+                
+                cursor = await conn.execute(query, params)
+                metric_rows = await cursor.fetchall()
             
             # Convert to export format
             export_data = {

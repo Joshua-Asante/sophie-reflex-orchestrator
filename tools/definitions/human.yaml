@@ -1,0 +1,10 @@
+name: human
+description: Pause execution and ask the user for text input.
+endpoint: https://stub.invalid/human
+method: GET
+parameters:
+  message:
+    type: string
+    description: Prompt to display to the user
+response:
+  type: text

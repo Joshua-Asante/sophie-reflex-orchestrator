@@ -1,0 +1,54 @@
+name: plan_generator
+description: Generate structured YAML execution plans from natural language directives
+endpoint: https://stub.invalid/plan-generator
+method: POST
+parameters:
+  directive:
+    type: string
+    description: Natural language directive from human
+  context:
+    type: object
+    description: Additional context about the current system state
+  confidence_threshold:
+    type: number
+    description: Minimum confidence required to proceed (0.0-1.0)
+    default: 0.75
+  approval_required:
+    type: boolean
+    description: Whether human approval is required before execution
+    default: true
+response:
+  type: object
+  properties:
+    plan_yaml:
+      type: string
+      description: Generated YAML execution plan
+    confidence_score:
+      type: number
+      description: Confidence score for the generated plan (0.0-1.0)
+    risk_assessment:
+      type: object
+      description: Risk assessment of the proposed changes
+      properties:
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+        risk_factors:
+          type: array
+          items:
+            type: string
+        mitigation_strategies:
+          type: array
+          items:
+            type: string
+    change_summary:
+      type: string
+      description: Human-readable summary of what will change
+    estimated_duration:
+      type: number
+      description: Estimated execution time in seconds
+    resources_required:
+      type: array
+      description: List of resources required for execution
+      items:
+        type: string 

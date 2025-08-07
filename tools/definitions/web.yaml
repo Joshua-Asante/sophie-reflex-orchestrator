@@ -1,0 +1,11 @@
+name: web_scrape
+description: >
+  Fetches a web page and returns clean text.
+endpoint: https://httpbin.org/get   # stub; real adapter ignores this
+method: GET
+parameters:
+  url:
+    type: string
+    description: Absolute URL to scrape
+response:
+  type: text

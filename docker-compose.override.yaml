@@ -1,0 +1,133 @@
+# SOPHIE Development Override Configuration
+# For Cursor IDE Integration and Local Development
+version: '3.8'
+
+services:
+  # Development orchestrator with hot reload
+  sophie-orchestrator-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.optimized
+      target: development
+    container_name: sophie-orchestrator-dev
+    ports:
+      - "8002:8000"  # Development API
+      - "8003:8001"  # Development HITL
+      - "9323:9323"  # Metrics endpoint
+    environment:
+      - LOG_LEVEL=DEBUG
+      - DEBUG=true
+      - ENVIRONMENT=development
+      - PYTHONPATH=/app
+      - CHROMA_HOST=chromadb
+      - REDIS_HOST=redis
+    volumes:
+      - ./:/app  # Full source code mount for hot reload
+      - ./configs:/app/configs:ro
+      - ./memory:/app/memory
+      - ./logs:/app/logs
+      - ./tests:/app/tests
+    depends_on:
+      chromadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sophie-network
+    restart: unless-stopped
+    profiles:
+      - development
+    command: ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # Frontend development server
+  sophie-frontend-dev:
+    build:
+      context: ../ui
+      dockerfile: Dockerfile.dev
+    container_name: sophie-frontend-dev
+    ports:
+      - "3000:3000"  # Next.js dev server
+      - "3001:3001"  # Additional dev port
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8002
+      - NEXT_PUBLIC_ORCHESTRATOR_URL=http://localhost:8002
+      - NEXT_PUBLIC_HITL_URL=http://localhost:8003
+    volumes:
+      - ../ui:/app  # Full source mount for hot reload
+      - /app/node_modules  # Preserve node_modules
+    networks:
+      - sophie-network
+    depends_on:
+      - sophie-orchestrator-dev
+    profiles:
+      - development
+    command: ["npm", "run", "dev"]
+
+  # Enhanced monitoring for development
+  prometheus-dev:
+    image: prom/prometheus:latest
+    container_name: sophie-prometheus-dev
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.dev.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_dev_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.dev.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=24h'
+      - '--web.enable-lifecycle'
+    networks:
+      - sophie-network
+    restart: unless-stopped
+    profiles:
+      - development
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+
+  # Development Grafana
+  grafana-dev:
+    image: grafana/grafana:latest
+    container_name: sophie-grafana-dev
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_dev_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus-dev
+    networks:
+      - sophie-network
+    restart: unless-stopped
+    profiles:
+      - development
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+
+volumes:
+  prometheus_dev_data:
+    driver: local
+  grafana_dev_data:
+    driver: local
+
+networks:
+  sophie-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.80.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: sophie-dev-br0 

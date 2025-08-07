@@ -1,0 +1,10 @@
+name: trust_summary
+description: Generate a console report from the trust-audit log.
+endpoint: https://stub.invalid/trust
+method: GET
+parameters:
+  log_path:
+    type: string
+    description: Path to trust_audit.jsonl
+response:
+  type: text

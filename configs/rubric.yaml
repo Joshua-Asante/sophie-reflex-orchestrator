@@ -1,4 +1,4 @@
-# Evaluation Rubric for Sophie Reflex Orchestrator
+# Evaluation Rubric for Sophie Reflex Orchestrator (Optimized)
 
 # Main Evaluation Categories
 categories:
@@ -6,46 +6,76 @@ categories:
     description: "How completely does the solution address the task requirements?"
     weight: 0.3
     levels:
-      excellent: "Fully addresses all requirements with comprehensive detail"
+      excellent: "Fully addresses all requirements with comprehensive detail and edge cases"
       good: "Addresses most requirements with sufficient detail"
-      fair: "Addresses basic requirements but lacks detail"
+      fair: "Addresses basic requirements but lacks detail or misses some aspects"
       poor: "Misses key requirements or is incomplete"
+    
+    # Sub-criteria for completeness
+    sub_criteria:
+      requirement_coverage: 0.4
+      detail_depth: 0.3
+      edge_case_handling: 0.3
   
   accuracy:
     description: "How accurate and correct is the solution?"
     weight: 0.3
     levels:
-      excellent: "Completely accurate with no errors"
-      good: "Mostly accurate with minor errors"
-      fair: "Partially accurate with significant errors"
-      poor: "Contains major inaccuracies or errors"
+      excellent: "Completely accurate with no errors and proper validation"
+      good: "Mostly accurate with minor errors that don't affect functionality"
+      fair: "Partially accurate with significant errors that impact functionality"
+      poor: "Contains major inaccuracies or errors that make it unusable"
+    
+    # Sub-criteria for accuracy
+    sub_criteria:
+      factual_correctness: 0.4
+      logical_consistency: 0.3
+      implementation_accuracy: 0.3
   
   creativity:
     description: "How creative and innovative is the solution?"
     weight: 0.2
     levels:
-      excellent: "Highly innovative with unique approaches"
-      good: "Creative with some novel elements"
-      fair: "Somewhat creative but mostly conventional"
-      poor: "Lacks creativity or innovation"
+      excellent: "Highly innovative with unique approaches and novel insights"
+      good: "Creative with some novel elements and original thinking"
+      fair: "Somewhat creative but mostly conventional approaches"
+      poor: "Lacks creativity or innovation, purely derivative"
+    
+    # Sub-criteria for creativity
+    sub_criteria:
+      novelty: 0.4
+      originality: 0.3
+      innovative_approach: 0.3
   
   clarity:
     description: "How clear and well-structured is the solution?"
     weight: 0.1
     levels:
-      excellent: "Exceptionally clear and well-organized"
-      good: "Clear with good organization"
-      fair: "Somewhat clear but could be better organized"
-      poor: "Unclear or poorly structured"
+      excellent: "Exceptionally clear and well-organized with excellent communication"
+      good: "Clear with good organization and understandable structure"
+      fair: "Somewhat clear but could be better organized or explained"
+      poor: "Unclear or poorly structured, difficult to understand"
+    
+    # Sub-criteria for clarity
+    sub_criteria:
+      communication_quality: 0.4
+      organization_structure: 0.3
+      accessibility: 0.3
   
   feasibility:
     description: "How feasible and implementable is the solution?"
     weight: 0.1
     levels:
-      excellent: "Highly feasible with clear implementation path"
-      good: "Feasible with reasonable implementation effort"
-      fair: "Somewhat feasible but requires significant effort"
-      poor: "Not feasible or impractical"
+      excellent: "Highly feasible with clear implementation path and realistic timeline"
+      good: "Feasible with reasonable implementation effort and resources"
+      fair: "Somewhat feasible but requires significant effort or resources"
+      poor: "Not feasible or impractical given current constraints"
+    
+    # Sub-criteria for feasibility
+    sub_criteria:
+      resource_requirements: 0.4
+      implementation_complexity: 0.3
+      timeline_realism: 0.3
 
 # Scoring System
 scoring:
@@ -60,37 +90,170 @@ scoring:
     good_min: 0.7
     fair_min: 0.5
     poor_min: 0.0
+  
+  # Weighted scoring
+  weighted_scoring: true
+  normalization: true
+  
+  # Confidence scoring
+  confidence:
+    high_confidence_threshold: 0.8
+    medium_confidence_threshold: 0.6
+    low_confidence_threshold: 0.4
 
 # Evaluation Criteria for Different Task Types
 task_types:
   problem_solving:
+    description: "Analytical problem-solving tasks requiring logical reasoning"
     weights:
       completeness: 0.4
       accuracy: 0.3
       creativity: 0.1
       clarity: 0.1
       feasibility: 0.1
+    
+    # Task-specific criteria
+    specific_criteria:
+      logical_reasoning: 0.3
+      step_by_step_process: 0.2
+      solution_validation: 0.2
+      error_handling: 0.15
+      optimization: 0.15
   
   creative_writing:
+    description: "Creative writing tasks requiring imagination and expression"
     weights:
       completeness: 0.2
       accuracy: 0.1
       creativity: 0.4
       clarity: 0.2
       feasibility: 0.1
+    
+    # Task-specific criteria
+    specific_criteria:
+      narrative_structure: 0.25
+      character_development: 0.2
+      descriptive_language: 0.2
+      emotional_impact: 0.15
+      originality: 0.2
   
   technical_design:
+    description: "Technical design tasks requiring engineering principles"
     weights:
       completeness: 0.3
       accuracy: 0.3
       creativity: 0.1
       clarity: 0.2
       feasibility: 0.2
+    
+    # Task-specific criteria
+    specific_criteria:
+      technical_specifications: 0.25
+      scalability: 0.2
+      maintainability: 0.2
+      performance_considerations: 0.15
+      security_aspects: 0.2
   
   strategic_planning:
+    description: "Strategic planning tasks requiring long-term thinking"
     weights:
       completeness: 0.3
       accuracy: 0.2
       creativity: 0.2
       clarity: 0.1
       feasibility: 0.3
+    
+    # Task-specific criteria
+    specific_criteria:
+      strategic_vision: 0.25
+      risk_assessment: 0.2
+      resource_allocation: 0.2
+      timeline_planning: 0.15
+      stakeholder_consideration: 0.2
+  
+  data_analysis:
+    description: "Data analysis tasks requiring analytical skills"
+    weights:
+      completeness: 0.3
+      accuracy: 0.4
+      creativity: 0.1
+      clarity: 0.15
+      feasibility: 0.05
+    
+    # Task-specific criteria
+    specific_criteria:
+      data_quality_assessment: 0.25
+      statistical_rigor: 0.25
+      insight_generation: 0.2
+      visualization_quality: 0.15
+      actionable_recommendations: 0.15
+  
+  code_generation:
+    description: "Code generation tasks requiring programming skills"
+    weights:
+      completeness: 0.25
+      accuracy: 0.35
+      creativity: 0.1
+      clarity: 0.2
+      feasibility: 0.1
+    
+    # Task-specific criteria
+    specific_criteria:
+      code_quality: 0.25
+      functionality: 0.25
+      readability: 0.2
+      efficiency: 0.15
+      documentation: 0.15
+
+# Evaluation Process
+evaluation_process:
+  # Multi-evaluator consensus
+  consensus:
+    min_evaluators: 2
+    consensus_threshold: 0.7
+    disagreement_resolution: "weighted_average"
+  
+  # Quality assurance
+  quality_assurance:
+    review_threshold: 0.8
+    auto_approve_threshold: 0.9
+    manual_review_threshold: 0.6
+  
+  # Feedback integration
+  feedback:
+    collect_feedback: true
+    feedback_weight: 0.2
+    improvement_tracking: true
+  
+  # Adaptive evaluation
+  adaptive:
+    adjust_weights: true
+    learning_rate: 0.01
+    adaptation_interval: 10
+
+# Performance Metrics
+performance_metrics:
+  evaluation_time:
+    target: 30  # seconds
+    max: 60
+    weight: 0.1
+  
+  consistency:
+    inter_evaluator_agreement: 0.8
+    intra_evaluator_consistency: 0.9
+    weight: 0.2
+  
+  accuracy:
+    ground_truth_accuracy: 0.85
+    human_agreement: 0.8
+    weight: 0.3
+  
+  efficiency:
+    throughput: 100  # evaluations per hour
+    resource_usage: 0.7
+    weight: 0.2
+  
+  reliability:
+    uptime: 0.99
+    error_rate: 0.01
+    weight: 0.2

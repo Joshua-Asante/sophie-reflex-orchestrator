@@ -1,0 +1,25 @@
+plan_name: "example_plan"
+description: "An example plan demonstrating basic functionality"
+version: "1.0.0"
+
+steps:
+  - name: "step_1"
+    tool: "web_scrape"
+    description: "Fetch data from a website"
+    params:
+      url: "https://example.com"
+      timeout: 30
+
+  - name: "step_2"
+    tool: "data_analysis"
+    description: "Analyze the fetched data"
+    params:
+      input_data: "{{ steps.step_1.output }}"
+      analysis_type: "summary"
+
+  - name: "step_3"
+    tool: "report_generator"
+    description: "Generate a report from the analysis"
+    params:
+      analysis_result: "{{ steps.step_2.output }}"
+      format: "markdown" 

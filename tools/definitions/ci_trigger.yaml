@@ -1,0 +1,50 @@
+name: ci_trigger
+description: Trigger CI/CD pipeline for infrastructure changes, code deployment, and artifact generation
+endpoint: https://stub.invalid/ci-trigger
+method: POST
+parameters:
+  pipeline_type:
+    type: string
+    description: Type of CI/CD pipeline to trigger (build, deploy, test, release)
+    enum: [build, deploy, test, release, full]
+  plan_yaml:
+    type: string
+    description: YAML execution plan with infrastructure changes
+  approval_level:
+    type: string
+    description: Required approval level for the change
+    enum: [autonomous, notification, approval, supervision]
+  trust_score:
+    type: number
+    description: Trust score for this change (0.0-1.0)
+  change_summary:
+    type: string
+    description: Human-readable summary of what will change
+  artifacts_requested:
+    type: array
+    description: List of artifacts to generate (.app, .deb, .docker, etc.)
+    items:
+      type: string
+response:
+  type: object
+  properties:
+    pipeline_id:
+      type: string
+      description: Unique identifier for the triggered pipeline
+    status:
+      type: string
+      description: Initial status of the pipeline
+    staging_url:
+      type: string
+      description: URL to staging environment (if applicable)
+    artifact_urls:
+      type: array
+      description: URLs to generated artifacts
+      items:
+        type: string
+    dashboard_url:
+      type: string
+      description: URL to monitoring dashboard
+    estimated_completion:
+      type: string
+      description: Estimated completion time 
