@@ -33,24 +33,22 @@ print_error() {
 # Check environment variables
 check_env_vars() {
     print_status "Checking environment variables..."
-    
+
     required_vars=(
-        "OPENAI_API_KEY"
-        "GOOGLE_API_KEY"
-        "ANTHROPIC_API_KEY"
+        "OPENROUTER_API_KEY"
         "NEXT_PUBLIC_API_URL"
         "NEXT_PUBLIC_ORCHESTRATOR_URL"
         "NEXT_PUBLIC_HITL_URL"
     )
-    
+
     missing_vars=()
-    
+
     for var in "${required_vars[@]}"; do
         if [ -z "${!var}" ]; then
             missing_vars+=("$var")
         fi
     done
-    
+
     if [ ${#missing_vars[@]} -ne 0 ]; then
         print_error "Missing required environment variables:"
         for var in "${missing_vars[@]}"; do
@@ -58,18 +56,18 @@ check_env_vars() {
         done
         exit 1
     fi
-    
+
     print_success "All required environment variables are set"
 }
 
 # Build production images
 build_prod_images() {
     print_status "Building production Docker images..."
-    
+
     # Build orchestrator
     docker build -f Dockerfile.optimized --target production -t sophie-orchestrator:prod .
     print_success "Orchestrator production image built"
-    
+
     # Build frontend
     cd ../ui
     docker build -f Dockerfile.prod -t sophie-frontend:prod .
@@ -80,7 +78,7 @@ build_prod_images() {
 # Create production configuration
 create_prod_config() {
     print_status "Creating production configuration..."
-    
+
     # Create nginx production config
     cat > nginx.prod.conf << EOF
 events {
@@ -91,19 +89,19 @@ http {
     upstream frontend {
         server sophie-frontend:3000;
     }
-    
+
     upstream orchestrator {
         server sophie-orchestrator:8000;
     }
-    
+
     upstream hitl {
         server sophie-orchestrator:8001;
     }
-    
+
     server {
         listen 80;
         server_name _;
-        
+
         # Frontend
         location / {
             proxy_pass http://frontend;
@@ -112,7 +110,7 @@ http {
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto \$scheme;
         }
-        
+
         # Orchestrator API
         location /api/ {
             proxy_pass http://orchestrator;
@@ -121,7 +119,7 @@ http {
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto \$scheme;
         }
-        
+
         # HITL Interface
         location /hitl/ {
             proxy_pass http://hitl;
@@ -130,7 +128,7 @@ http {
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto \$scheme;
         }
-        
+
         # Health checks
         location /health {
             access_log off;
@@ -140,7 +138,7 @@ http {
     }
 }
 EOF
-    
+
     # Create production Prometheus config
     cat > monitoring/prometheus.prod.yml << EOF
 global:
@@ -167,17 +165,17 @@ scrape_configs:
     static_configs:
       - targets: ['redis:6379']
 EOF
-    
+
     print_success "Production configuration created"
 }
 
 # Deploy to production
 deploy_production() {
     print_status "Deploying to production..."
-    
+
     # Use windsurf.yaml for production deployment
     docker-compose -f windsurf.yaml up -d
-    
+
     print_success "Production deployment started"
     print_status "Services available at:"
     echo "  - Frontend: http://localhost:3000"
@@ -191,24 +189,24 @@ deploy_production() {
 # Check production health
 check_prod_health() {
     print_status "Checking production service health..."
-    
+
     # Wait for services to be ready
     sleep 30
-    
+
     # Check orchestrator
     if curl -f http://localhost:8000/api/health > /dev/null 2>&1; then
         print_success "Orchestrator is healthy"
     else
         print_warning "Orchestrator health check failed"
     fi
-    
+
     # Check frontend
     if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
         print_success "Frontend is healthy"
     else
         print_warning "Frontend health check failed"
     fi
-    
+
     # Check ChromaDB
     if curl -f http://localhost:8004/api/v1/heartbeat > /dev/null 2>&1; then
         print_success "ChromaDB is healthy"
@@ -220,7 +218,7 @@ check_prod_health() {
 # Setup SSL certificates (if available)
 setup_ssl() {
     print_status "Setting up SSL certificates..."
-    
+
     if [ -d "ssl" ]; then
         print_success "SSL certificates found"
     else
@@ -235,14 +233,14 @@ setup_ssl() {
 # Main execution
 main() {
     print_status "Starting SOPHIE production deployment..."
-    
+
     check_env_vars
     build_prod_images
     create_prod_config
     setup_ssl
     deploy_production
     check_prod_health
-    
+
     print_success "SOPHIE production deployment complete!"
     print_status "Next steps:"
     echo "  - Configure your domain in Windsurf"
@@ -252,4 +250,4 @@ main() {
 }
 
 # Run main function
-main "$@" 
+main "$@"

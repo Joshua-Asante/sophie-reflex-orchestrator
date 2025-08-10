@@ -2,55 +2,25 @@
 
 # API Keys and Authentication
 api_keys:
-  openai: ""  # Set your OpenAI API key here
-  google: ""  # Set your Google API key here
-  xai: ""  # Set your XAI API key here
-  mistral: ""  # Set your Mistral AI API key here
-  deepseek: ""  # Set your DeepSeek API key here
-  kimi: ""  # Set your Kimi API key here
-  glm: ""  # Set your GLM API key here
+  openrouter: "" # Set your OpenRouter API key here
 
 # Model Configuration
 models:
-  default: "openai"  # Options: openai, google, xai, mistral, deepseek, kimi, glm
+  default: "openai" # Logical tag; routed via OpenRouter
   openai:
-    model: "gpt-4"
+    model: "openai/gpt-4o"
     temperature: 0.7
     max_tokens: 2000
     timeout: 30
     max_retries: 3
   google:
-    model: "gemini-1.5-pro"
+    model: "google/gemini-pro"
     temperature: 0.7
     max_tokens: 2000
     timeout: 30
     max_retries: 3
-  xai:
-    model: "grok-2-1212"
-    temperature: 0.7
-    max_tokens: 2000
-    timeout: 30
-    max_retries: 3
-  mistral:
-    model: "mistral-large-latest"
-    temperature: 0.7
-    max_tokens: 2000
-    timeout: 30
-    max_retries: 3
-  deepseek:
-    model: "deepseek-chat"
-    temperature: 0.7
-    max_tokens: 2000
-    timeout: 30
-    max_retries: 3
-  kimi:
-    model: "moonshot-v1-8k"
-    temperature: 0.7
-    max_tokens: 2000
-    timeout: 30
-    max_retries: 3
-  glm:
-    model: "glm-4.5"
+  anthropic:
+    model: "anthropic/claude-3.5-sonnet"
     temperature: 0.7
     max_tokens: 2000
     timeout: 30
@@ -58,7 +28,7 @@ models:
 
 # Memory Backend Configuration
 memory:
-  backend: "chromadb"  # Options: chromadb, sqlite-vss
+  backend: "chromadb" # Options: chromadb, sqlite-vss
   chromadb:
     host: "chromadb"
     port: 8000
@@ -95,7 +65,7 @@ genetic_algorithm:
   elite_count: 2
   max_generations: 50
   convergence_threshold: 0.95
-  max_execution_time: 3600  # 1 hour
+  max_execution_time: 3600 # 1 hour
   parallel_execution: true
   batch_size: 10
 
@@ -154,7 +124,7 @@ security:
 
 # Database Configuration
 database:
-  type: "sqlite"  # Options: sqlite, postgresql
+  type: "sqlite" # Options: sqlite, postgresql
   sqlite:
     path: "./memory/sophie.db"
     timeout: 30
@@ -184,4 +154,4 @@ logging:
   file:
     path: "./logs/sophie.log"
     max_size: "100MB"
-    backup_count: 5 
+    backup_count: 5

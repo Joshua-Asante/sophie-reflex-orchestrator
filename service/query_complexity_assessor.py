@@ -4,7 +4,7 @@ from model_gateway.gateway import dispatch_to_model
 class QueryComplexityAssessor:
     """
     Analyzes a user's query to assess its complexity and characteristics.
-    
+
     This class uses a fast LLM to break down a query into a structured
     YAML object, which can then be used by the main router to make an
     intelligent routing decision.
@@ -13,7 +13,7 @@ class QueryComplexityAssessor:
         """
         The assessor is now self-contained and uses the central model gateway directly.
         """
-        self.assessment_model = "gemini-1.5-flash"  # Use a fast and efficient model for this task
+        self.assessment_model = "capability:general_agentic"  # Use capability routing
 
     def assess(self, query: str) -> dict:
         """
@@ -63,10 +63,10 @@ Query:
             text_content = "".join(
                 part["text"] for part in response_data["candidates"][0]["content"]["parts"] if "text" in part
             )
-            
+
             # Clean the response to ensure it's valid YAML (removes markdown backticks)
             cleaned_yaml_str = text_content.strip().replace("```yaml", "").replace("```", "").strip()
-            
+
             # Parse the YAML string into a Python dictionary
             assessment_dict = yaml.safe_load(cleaned_yaml_str)
 

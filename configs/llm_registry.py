@@ -1,6 +1,7 @@
 import yaml
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
+from sophie_shared.openrouter.capabilities import preferred_model_for
 
 class LLMRegistry:
     """Loads and provides access to the LLM registry config."""
@@ -29,7 +30,13 @@ class LLMRegistry:
             print(f"ERROR: Could not parse llm_registry.yaml: {e}")
 
     def get_model(self, name: str) -> Dict[str, Any]:
-        """Gets a model by name."""
+        """Gets a model by name or resolves capability:NAME to preferred model."""
+        if name.startswith("capability:"):
+            cap = name.split(":", 1)[1]
+            resolved: Optional[str] = preferred_model_for(cap)
+            if not resolved:
+                raise KeyError(f"No preferred model configured for capability: {cap}")
+            name = resolved
         return self._models[name]
 
     def list_models(self) -> List[Dict[str, Any]]:

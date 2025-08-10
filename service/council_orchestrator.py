@@ -13,6 +13,8 @@ from typing import Dict, Any, List
 # --- Import Core Golden Path Components ---
 from llm_registry import LLMRegistry
 from llm.model_gateway import ModelGateway
+from sophie_shared.openrouter.async_client import OpenRouterAsyncClient
+from sophie_shared.openrouter.capabilities import preferred_model_for
 from utils.debug_trace import DebugTrace
 from governance.trust_manager import TrustManager
 
@@ -26,17 +28,18 @@ class CouncilOrchestrator:
         """Initializes all necessary components for council operation."""
         self.registry = LLMRegistry()
         self.gateway = ModelGateway.get()
+        self.openrouter = OpenRouterAsyncClient()
         self.trust_manager = TrustManager()
         self.logger = DebugTrace()
 
         # Define the roles for each stage in the sequential pipeline.
         # This maps a proprietary stage to a model role defined in the LLMRegistry.
         self.pipeline_stages = {
-            "Strategy": "Navigator",
-            "Tooling": "Specialist",
-            "Execution": "Pragmatist",
-            "Review": "Integrator",
-            "Tests": "Adversarial Probe"
+            "Strategy": {"role": "Navigator", "capability": "general_agentic"},
+            "Tooling": {"role": "Specialist", "capability": "coding_reasoning"},
+            "Execution": {"role": "Pragmatist", "capability": "coding_reasoning"},
+            "Review": {"role": "Integrator", "capability": "general_agentic"},
+            "Tests": {"role": "Adversarial Probe", "capability": "coding_reasoning"},
         }
 
     def _get_model_for_stage(self, stage_name: str) -> Any:

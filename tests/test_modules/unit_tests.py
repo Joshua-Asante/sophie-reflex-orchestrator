@@ -37,16 +37,16 @@ logger = structlog.get_logger()
 
 class UnitTestSuite:
     """Unit test suite for individual components."""
-    
+
     def __init__(self, temp_dir: str):
         self.temp_dir = temp_dir
         self.test_results = []
-        
+
     async def run_all_tests(self) -> bool:
         """Run all unit tests and return success status."""
         print("🧪 Running Unit Tests")
         print("-" * 40)
-        
+
         test_functions = [
             ("Agent Config Creation", self._test_agent_config_creation),
             ("Base Agent Initialization", self._test_base_agent_initialization),
@@ -61,7 +61,7 @@ class UnitTestSuite:
             ("Agent Result Creation", self._test_agent_result_creation),
             ("Status Enum Values", self._test_status_enum_values)
         ]
-        
+
         all_passed = True
         for test_name, test_func in test_functions:
             try:
@@ -77,9 +77,9 @@ class UnitTestSuite:
                 print(f"❌ {test_name}: ERROR - {str(e)}")
                 self.test_results.append((test_name, "ERROR", str(e)))
                 all_passed = False
-        
+
         return all_passed
-    
+
     async def _test_agent_config_creation(self) -> bool:
         """Test AgentConfig creation and validation."""
         try:
@@ -87,11 +87,11 @@ class UnitTestSuite:
             config = AgentConfig(
                 name="test_agent",
                 prompt="You are a test agent.",
-                model="openai",
+                model="capability:general_agentic",
                 temperature=0.7,
                 max_tokens=1000
             )
-            
+
             # Verify all fields are set correctly
             assert config.name == "test_agent"
             assert config.prompt == "You are a test agent."
@@ -100,26 +100,26 @@ class UnitTestSuite:
             assert config.max_tokens == 1000
             assert config.timeout == 30  # Default value
             assert config.max_retries == 3  # Default value
-            
+
             # Test with hyperparameters
             config_with_hypers = AgentConfig(
                 name="test_agent_with_hypers",
                 prompt="You are a test agent with hyperparameters.",
-                model="anthropic",
+                model="capability:general_agentic",
                 temperature=0.8,
                 max_tokens=2000,
                 hyperparameters={"creativity": 0.9, "detail_level": 0.7}
             )
-            
+
             assert config_with_hypers.hyperparameters["creativity"] == 0.9
             assert config_with_hypers.hyperparameters["detail_level"] == 0.7
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Agent config creation test failed", error=str(e))
             return False
-    
+
     async def _test_base_agent_initialization(self) -> bool:
         """Test BaseAgent initialization (abstract class)."""
         try:
@@ -134,44 +134,44 @@ class UnitTestSuite:
                         execution_time=0.1,
                         status=AgentStatus.COMPLETED
                     )
-                
+
                 async def generate_prompt(self, task: str, context: Dict[str, Any] = None) -> str:
                     return f"Test prompt for task: {task}"
-            
+
             # Test agent initialization
             config = AgentConfig(
                 name="test_base_agent",
                 prompt="You are a test base agent.",
-                model="openai",
+                model="capability:general_agentic",
                 temperature=0.7,
                 max_tokens=1000
             )
-            
+
             agent = TestAgent(config, agent_id="test_agent_001")
-            
+
             # Verify initialization
             assert agent.agent_id == "test_agent_001"
             assert agent.config.name == "test_base_agent"
             assert agent.trust_score == 0.5  # Default value
             assert agent.execution_count == 0
-            
+
             # Test basic methods
             assert agent.get_success_rate() == 0.0  # No executions yet
             assert agent.get_performance_metrics()["total_executions"] == 0
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Base agent initialization test failed", error=str(e))
             return False
-    
+
     async def _test_prover_agent_creation(self) -> bool:
         """Test ProverAgent creation and basic functionality."""
         try:
             config = AgentConfig(
                 name="test_prover",
                 prompt="You are a test prover agent.",
-                model="openai",
+                model="capability:general_agentic",
                 temperature=0.7,
                 max_tokens=1000,
                 hyperparameters={
@@ -180,34 +180,34 @@ class UnitTestSuite:
                     "detail_level": 0.7
                 }
             )
-            
+
             prover = ProverAgent(config, agent_id="test_prover_001")
-            
+
             # Verify initialization
             assert prover.agent_id == "test_prover_001"
             assert prover.max_variants == 3
             assert prover.creativity == 0.8
             assert prover.detail_level == 0.7
             assert prover.variant_generator is not None
-            
+
             # Test specialization info
             specialization_info = prover.get_specialization_info()
             assert "specialization" in specialization_info
             assert "capabilities" in specialization_info
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Prover agent creation test failed", error=str(e))
             return False
-    
+
     async def _test_evaluator_agent_creation(self) -> bool:
         """Test EvaluatorAgent creation and basic functionality."""
         try:
             config = AgentConfig(
                 name="test_evaluator",
                 prompt="You are a test evaluator agent.",
-                model="openai",
+                model="capability:general_agentic",
                 temperature=0.7,
                 max_tokens=1000,
                 hyperparameters={
@@ -215,25 +215,25 @@ class UnitTestSuite:
                     "consensus_threshold": 0.2
                 }
             )
-            
+
             evaluator = EvaluatorAgent(config, agent_id="test_evaluator_001")
-            
+
             # Verify initialization
             assert evaluator.agent_id == "test_evaluator_001"
             assert evaluator.consensus_enabled is True
             assert evaluator.consensus_threshold == 0.2
             assert evaluator.evaluation_metrics is not None
-            
+
             # Test evaluation criteria
             criteria = evaluator.get_evaluation_criteria()
             assert isinstance(criteria, dict)
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Evaluator agent creation test failed", error=str(e))
             return False
-    
+
     async def _test_refiner_agent_creation(self) -> bool:
         """Test RefinerAgent creation and basic functionality."""
         try:
@@ -250,9 +250,9 @@ class UnitTestSuite:
                     "balance_ratio": 0.6
                 }
             )
-            
+
             refiner = RefinerAgent(config, agent_id="test_refiner_001")
-            
+
             # Verify initialization
             assert refiner.agent_id == "test_refiner_001"
             assert refiner.mutation_strength == 0.3
@@ -261,19 +261,19 @@ class UnitTestSuite:
             assert refiner.balance_ratio == 0.6
             assert refiner.population_manager is not None
             assert refiner.adaptive_mutation is not None
-            
+
             # Test refinement stats
             stats = refiner.get_refinement_stats()
             assert "generation_count" in stats
             assert "mutation_strength" in stats
             assert "focus_areas" in stats
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Refiner agent creation test failed", error=str(e))
             return False
-    
+
     async def _test_orchestrator_config_loading(self) -> bool:
         """Test OrchestratorConfig loading from file."""
         try:
@@ -295,7 +295,7 @@ class UnitTestSuite:
         except Exception as e:
             logger.error("Orchestrator config loading test failed", error=str(e))
             return False
-    
+
     async def _test_trust_tracker_initialization(self) -> bool:
         """Test TrustTracker initialization."""
         try:
@@ -315,8 +315,8 @@ class UnitTestSuite:
 
             # Test trust history
             await tracker.record_event(
-                "agent_001", 
-                TrustEventType.TASK_SUCCESS, 
+                "agent_001",
+                TrustEventType.TASK_SUCCESS,
                 "Test event",
                 custom_score_change=0.1
             )
@@ -329,7 +329,7 @@ class UnitTestSuite:
         except Exception as e:
             logger.error("Trust tracker initialization test failed", error=str(e))
             return False
-    
+
     async def _test_policy_engine_initialization(self) -> bool:
         """Test PolicyEngine initialization."""
         try:
@@ -344,25 +344,25 @@ class UnitTestSuite:
                     "max_trust_score": 1.0
                 }
             }
-            
+
             policy_engine = PolicyEngine(test_policies)
-            
+
             # Test policy engine initialization
             assert policy_engine.policies_config == test_policies
             assert policy_engine.hitl_policies["enabled"] is True
             assert policy_engine.trust_policies["min_trust_score"] == 0.3
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Policy engine initialization test failed", error=str(e))
             return False
-    
+
     async def _test_audit_log_initialization(self) -> bool:
         """Test AuditLog initialization."""
         try:
             audit_log = AuditLog()
-            
+
             # Test logging functionality
             event_id = audit_log.log_event(
                 event_type=AuditEventType.TASK_SUBMITTED,
@@ -370,39 +370,39 @@ class UnitTestSuite:
                 details={"test": "data"},
                 agent_id="test_agent"
             )
-            
+
             # Verify log entry was created
             assert event_id is not None
-            
+
             # Test audit log initialization
             assert audit_log.db_path is not None
             assert audit_log.current_session is not None
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Audit log initialization test failed", error=str(e))
             return False
-    
+
     async def _test_config_manager_loading(self) -> bool:
         """Test ConfigManager loading and validation."""
         try:
             config_manager = ConfigManager()
-            
+
             # Test loading configurations
             await config_manager.load_and_validate_all()
-            
+
             # Verify configurations are loaded
             assert config_manager.system_config is not None
             assert config_manager.agents_config is not None
             assert config_manager.policies_config is not None
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Config manager loading test failed", error=str(e))
             return False
-    
+
     async def _test_agent_result_creation(self) -> bool:
         """Test AgentResult creation and validation."""
         try:
@@ -415,7 +415,7 @@ class UnitTestSuite:
                 execution_time=1.5,
                 status=AgentStatus.COMPLETED
             )
-            
+
             # Verify all fields
             assert result.agent_id == "test_agent_001"
             assert result.agent_name == "Test Agent"
@@ -424,7 +424,7 @@ class UnitTestSuite:
             assert result.execution_time == 1.5
             assert result.status == AgentStatus.COMPLETED
             assert result.error_message is None
-            
+
             # Test with error
             error_result = AgentResult(
                 agent_id="test_agent_002",
@@ -435,16 +435,16 @@ class UnitTestSuite:
                 status=AgentStatus.FAILED,
                 error_message="Test error"
             )
-            
+
             assert error_result.status == AgentStatus.FAILED
             assert error_result.error_message == "Test error"
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Agent result creation test failed", error=str(e))
             return False
-    
+
     async def _test_status_enum_values(self) -> bool:
         """Test AgentStatus enum values."""
         try:
@@ -458,21 +458,21 @@ class UnitTestSuite:
                 AgentStatus.RATE_LIMITED,
                 AgentStatus.CIRCUIT_OPEN
             ]
-            
+
             # Verify all statuses are valid
             for status in statuses:
                 assert isinstance(status, AgentStatus)
                 assert status.value in [
-                    "idle", "running", "completed", "failed", 
+                    "idle", "running", "completed", "failed",
                     "blocked", "rate_limited", "circuit_open"
                 ]
-            
+
             # Test status comparison
             assert AgentStatus.COMPLETED != AgentStatus.FAILED
             assert AgentStatus.IDLE == AgentStatus.IDLE
-            
+
             return True
-            
+
         except Exception as e:
             logger.error("Status enum values test failed", error=str(e))
-            return False 
+            return False

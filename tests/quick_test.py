@@ -14,31 +14,31 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 def test_imports():
     """Test basic imports."""
     print("🧪 Testing basic imports...")
-    
+
     try:
         # Test agent imports
         from agents.base_agent import BaseAgent, AgentConfig, AgentResult, AgentStatus
         print("✅ Agent imports: OK")
-        
+
         # Test orchestrator imports
         from orchestrator.models.orchestrator_config import OrchestratorConfig
         print("✅ Orchestrator config: OK")
-        
+
         # Test memory imports
         from memory.trust_tracker import TrustTracker, TrustEventType
         print("✅ Trust tracker: OK")
-        
+
         # Test governance imports
         from governance.policy_engine import PolicyEngine
         from governance.audit_log import AuditLog, AuditEventType
         print("✅ Governance components: OK")
-        
+
         # Test config imports
         from configs.config_manager import ConfigManager
         print("✅ Config manager: OK")
-        
+
         return True
-        
+
     except ImportError as e:
         print(f"❌ Import error: {e}")
         return False
@@ -46,19 +46,19 @@ def test_imports():
 async def test_basic_components():
     """Test basic component creation."""
     print("\n🧪 Testing basic component creation...")
-    
+
     try:
         # Test AgentConfig creation
         from agents.base_agent import AgentConfig
         config = AgentConfig(
             name="test_agent",
             prompt="You are a test agent.",
-            model="openai",
+            model="capability:general_agentic",
             temperature=0.7,
             max_tokens=1000
         )
         print("✅ AgentConfig creation: OK")
-        
+
         # Test AgentResult creation
         from agents.base_agent import AgentResult, AgentStatus
         result = AgentResult(
@@ -70,7 +70,7 @@ async def test_basic_components():
             status=AgentStatus.COMPLETED
         )
         print("✅ AgentResult creation: OK")
-        
+
         # Test TrustTracker creation
         from memory.trust_tracker import TrustTracker
         tracker_config = {
@@ -82,7 +82,7 @@ async def test_basic_components():
         }
         tracker = TrustTracker(tracker_config)
         print("✅ TrustTracker creation: OK")
-        
+
         # Test PolicyEngine creation
         from governance.policy_engine import PolicyEngine
         policies = {
@@ -91,16 +91,16 @@ async def test_basic_components():
         }
         policy_engine = PolicyEngine(policies)
         print("✅ PolicyEngine creation: OK")
-        
+
         # Test AuditLog creation (async)
         from governance.audit_log import AuditLog, AuditEventType
         audit_log = AuditLog()
         # Wait for async initialization
         await audit_log._initialize_database_async()
         print("✅ AuditLog creation: OK")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"❌ Component creation error: {e}")
         return False
@@ -109,14 +109,14 @@ async def main():
     """Main test function."""
     print("🚀 Sophie Reflexive Orchestrator - Quick Test")
     print("=" * 50)
-    
+
     # Test imports
     imports_ok = test_imports()
-    
+
     if imports_ok:
         # Test component creation
         components_ok = await test_basic_components()
-        
+
         if components_ok:
             print("\n🎉 All basic tests passed!")
             print("✅ The system appears to be working correctly.")
@@ -130,4 +130,4 @@ async def main():
 
 if __name__ == "__main__":
     success = asyncio.run(main())
-    sys.exit(0 if success else 1) 
+    sys.exit(0 if success else 1)

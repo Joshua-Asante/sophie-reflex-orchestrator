@@ -47,7 +47,7 @@ check_env() {
         print_warning ".env file not found. Creating from template..."
         cp env.example .env
         print_warning "Please edit .env file with your API keys before continuing"
-        print_warning "Required keys: OPENAI_API_KEY, GOOGLE_API_KEY, ANTHROPIC_API_KEY"
+        print_warning "Required key: OPENROUTER_API_KEY"
     else
         print_success "Environment file found"
     fi
@@ -63,11 +63,11 @@ create_directories() {
 # Build development images
 build_images() {
     print_status "Building development Docker images..."
-    
+
     # Build orchestrator
     docker build -f Dockerfile.optimized --target development -t sophie-orchestrator:dev .
     print_success "Orchestrator image built"
-    
+
     # Build frontend
     cd ../ui
     docker build -f Dockerfile.dev -t sophie-frontend:dev .
@@ -78,10 +78,10 @@ build_images() {
 # Start development services
 start_dev_services() {
     print_status "Starting development services..."
-    
+
     # Start with development profile
     docker-compose --profile development up -d
-    
+
     print_success "Development services started"
     print_status "Services available at:"
     echo "  - Frontend: http://localhost:3000"
@@ -95,24 +95,24 @@ start_dev_services() {
 # Check service health
 check_health() {
     print_status "Checking service health..."
-    
+
     # Wait for services to be ready
     sleep 10
-    
+
     # Check orchestrator
     if curl -f http://localhost:8002/api/health > /dev/null 2>&1; then
         print_success "Orchestrator is healthy"
     else
         print_warning "Orchestrator health check failed"
     fi
-    
+
     # Check frontend
     if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
         print_success "Frontend is healthy"
     else
         print_warning "Frontend health check failed"
     fi
-    
+
     # Check ChromaDB
     if curl -f http://localhost:8004/api/v1/heartbeat > /dev/null 2>&1; then
         print_success "ChromaDB is healthy"
@@ -124,7 +124,7 @@ check_health() {
 # Setup monitoring
 setup_monitoring() {
     print_status "Setting up monitoring..."
-    
+
     # Create Prometheus config if it doesn't exist
     if [ ! -f "monitoring/prometheus.dev.yml" ]; then
         cat > monitoring/prometheus.dev.yml << EOF
@@ -150,7 +150,7 @@ EOF
 # Main execution
 main() {
     print_status "Starting SOPHIE development setup..."
-    
+
     check_docker
     check_env
     create_directories
@@ -158,7 +158,7 @@ main() {
     setup_monitoring
     start_dev_services
     check_health
-    
+
     print_success "SOPHIE development environment is ready!"
     print_status "You can now:"
     echo "  - Edit code in Cursor with hot reload"
@@ -168,4 +168,4 @@ main() {
 }
 
 # Run main function
-main "$@" 
+main "$@"

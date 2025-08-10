@@ -15,9 +15,7 @@ services:
       - LOG_LEVEL=INFO
       - PYTHONPATH=/app
       # API Keys (set these in your .env file)
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     volumes:
       - ./configs:/app/configs:ro
       - ./memory:/app/memory
@@ -66,9 +64,7 @@ services:
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=DEBUG
       - PYTHONPATH=/app
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     volumes:
       - ./configs:/app/configs:ro
       - ./memory:/app/memory
@@ -257,4 +253,4 @@ networks:
       config:
         - subnet: 172.20.0.0/16
     driver_opts:
-      com.docker.network.bridge.name: sophie-br0 
+      com.docker.network.bridge.name: sophie-br0

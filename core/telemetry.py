@@ -13,6 +13,7 @@ import structlog
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
+from sophie_shared.telemetry import record_action
 from prometheus_client import start_http_server
 
 import json
@@ -128,6 +129,12 @@ class EnhancedTelemetryManager:
                 else:
                     self.error_counts[event.event_type] += 1
             
+            # Emit lightweight JSONL record via shared package (scaffold)
+            _ = record_action(event.event_type, {
+                "component": event.component,
+                "success": event.success,
+                "metadata": event.metadata,
+            })
             logger.debug(f"Telemetry event logged: {event.event_type}")
             
         except Exception as e:
