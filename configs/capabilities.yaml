@@ -1,0 +1,13 @@
+# Capability-first routing. Each capability lists preferred OpenRouter model IDs in order.
+
+coding_reasoning:
+  - openai/gpt-4o
+  - deepseek/deepseek-reasoner
+
+general_agentic:
+  - anthropic/claude-3.5-sonnet
+  - openai/gpt-4o
+
+longform_research:
+  - google/gemini-2.0-pro-exp
+  - anthropic/claude-3.5-sonnet
